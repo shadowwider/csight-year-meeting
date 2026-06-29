@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+*.log
+
+# Personal data imports stay local and should be uploaded through the admin UI.
+*.csv
+*.xlsx
+*.xls
+!public/csightlogo.png

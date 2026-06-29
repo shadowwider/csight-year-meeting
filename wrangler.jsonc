@@ -1,0 +1,20 @@
+{
+  "name": "csight-alumni-passion",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-29",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "CAMPAIGN_SLUG": "csight-passion-2026"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "csight-alumni-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

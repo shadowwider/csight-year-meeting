@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>创见星图 · 年度回声</title>
+  <style>
+    :root{
+      --paper:#fbf8f0;
+      --paper-2:#f5efe4;
+      --surface:#fffdf8;
+      --surface-2:#f8f3ea;
+      --ink:#25231f;
+      --muted:#736c62;
+      --faint:#a49a8d;
+      --line:#d9d0c2;
+      --line-strong:#2f2a24;
+      --tea:#b7663c;
+      --tea-dark:#8f4728;
+      --moss:#4f7a5a;
+      --moss-soft:#edf5ed;
+      --indigo:#405e7c;
+      --indigo-soft:#eef3f8;
+      --gold:#c79a43;
+      --gold-soft:#fbf1d7;
+      --red:#a5483f;
+      --red-soft:#fbebea;
+      --star:#e6c96a;
+      --shadow:0 16px 42px rgba(52,45,36,.09);
+      --serif:"Iowan Old Style","Songti SC","Noto Serif SC",Georgia,serif;
+      --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+      --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 12% 16%, rgba(230,201,106,.22) 0 1px, transparent 2px),
+        radial-gradient(circle at 82% 9%, rgba(64,94,124,.18) 0 1px, transparent 2px),
+        radial-gradient(circle at 78% 78%, rgba(79,122,90,.15) 0 1px, transparent 2px),
+        linear-gradient(135deg,var(--paper),#fffaf2 48%,#f8f0e4);
+      font-family:var(--sans);
+      line-height:1.55;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.55;
+      background-image:
+        linear-gradient(120deg, transparent 0 44%, rgba(64,94,124,.08) 44.15%, transparent 44.3% 100%),
+        linear-gradient(58deg, transparent 0 68%, rgba(183,102,60,.08) 68.1%, transparent 68.25% 100%);
+      background-size:680px 680px,520px 520px;
+      mix-blend-mode:multiply;
+    }
+
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+    button{border:0}
+    .app{min-height:100vh}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(251,248,240,.88);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(47,42,36,.16);
+    }
+    .topbar-inner{
+      max-width:1180px;
+      margin:0 auto;
+      padding:14px 22px;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+      cursor:pointer;
+      text-decoration:none;
+    }
+    .seal{
+      width:42px;
+      height:42px;
+      border:1.5px solid var(--line-strong);
+      background:var(--surface);
+      display:grid;
+      place-items:center;
+      font-family:var(--serif);
+      font-size:22px;
+      line-height:1;
+      color:var(--tea);
+      position:relative;
+      flex:0 0 auto;
+    }
+    .seal::after{
+      content:"";
+      position:absolute;
+      width:5px;
+      height:5px;
+      right:6px;
+      top:7px;
+      border-radius:50%;
+      background:var(--star);
+      box-shadow:-18px 20px 0 rgba(230,201,106,.7),10px 24px 0 rgba(79,122,90,.6);
+    }
+    .brand-title{min-width:0}
+    .brand-title b{
+      display:block;
+      font-family:var(--serif);
+      font-size:20px;
+      letter-spacing:0;
+      line-height:1.1;
+      white-space:nowrap;
+    }
+    .brand-title span{
+      display:block;
+      margin-top:2px;
+      font-family:var(--mono);
+      font-size:10px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      white-space:nowrap;
+    }
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav button{
+      height:34px;
+      padding:0 11px;
+      color:var(--muted);
+      background:transparent;
+      border:1px solid transparent;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .nav button:hover,.nav button.on{
+      color:var(--ink);
+      background:var(--surface);
+      border-color:var(--line);
+    }
+    .nav .admin-entry{
+      color:var(--indigo);
+      border-color:rgba(64,94,124,.25);
+      background:rgba(255,255,255,.45);
+    }
+
+    main{position:relative;z-index:1}
+    .wrap{
+      max-width:1120px;
+      margin:0 auto;
+      padding:34px 22px 72px;
+    }
+    .narrow{max-width:860px}
+    .page{display:none}
+    .page.active{display:block;animation:rise .26s ease-out}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    .status-strip{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .chip,.status-pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:28px;
+      padding:4px 10px;
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.78);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.2;
+      white-space:nowrap;
+    }
+    .status-pill{
+      font-family:var(--mono);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .status-pill.open{color:var(--moss);border-color:rgba(79,122,90,.35);background:var(--moss-soft)}
+    .status-pill.warn{color:var(--tea-dark);border-color:rgba(183,102,60,.35);background:#fff1e8}
+    .status-pill.closed{color:var(--red);border-color:rgba(165,72,63,.35);background:var(--red-soft)}
+    .chip.gold{color:#7b5b17;background:var(--gold-soft);border-color:rgba(199,154,67,.35)}
+    .chip.indigo{color:var(--indigo);background:var(--indigo-soft);border-color:rgba(64,94,124,.24)}
+    .chip.moss{color:var(--moss);background:var(--moss-soft);border-color:rgba(79,122,90,.28)}
+
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
+      gap:34px;
+      align-items:start;
+    }
+    .letter-panel{
+      background:rgba(255,253,248,.86);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      padding:36px;
+      position:relative;
+      overflow:hidden;
+    }
+    .letter-panel::before{
+      content:"";
+      position:absolute;
+      inset:18px;
+      border:1px solid rgba(216,208,194,.42);
+      pointer-events:none;
+    }
+    .kicker{
+      font-family:var(--mono);
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--tea);
+      margin-bottom:10px;
+    }
+    h1,h2,h3{margin:0}
+    h1{
+      font-family:var(--serif);
+      font-size:clamp(34px,6vw,66px);
+      line-height:1.05;
+      letter-spacing:0;
+      font-weight:600;
+    }
+    h2{
+      font-family:var(--serif);
+      font-size:30px;
+      line-height:1.15;
+      font-weight:600;
+      letter-spacing:0;
+    }
+    h3{
+      font-size:18px;
+      line-height:1.25;
+      font-weight:650;
+    }
+    .sub{
+      margin:14px 0 0;
+      color:var(--muted);
+      max-width:680px;
+      font-size:16px;
+    }
+    .letter-body{
+      margin-top:30px;
+      font-family:var(--serif);
+      font-size:18px;
+      line-height:1.95;
+      color:#302b25;
+    }
+    .letter-body p{margin:0 0 17px}
+    .hl{
+      background:linear-gradient(transparent 58%,rgba(230,201,106,.38) 58%);
+      padding:0 2px;
+    }
+    .sig{
+      margin-top:28px;
+      text-align:right;
+      font-family:var(--serif);
+      font-size:17px;
+    }
+    .sig small{
+      display:block;
+      margin-top:4px;
+      font-family:var(--mono);
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .side-stack{display:flex;flex-direction:column;gap:16px}
+    .card{
+      background:rgba(255,253,248,.9);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+    .card.flat{box-shadow:none;background:rgba(255,253,248,.72)}
+    .cta-card{
+      border-color:rgba(183,102,60,.26);
+      background:linear-gradient(180deg,#fff9f1,#fff3e8);
+    }
+    .cta-card h3{
+      font-family:var(--serif);
+      font-size:24px;
+      line-height:1.2;
+    }
+    .mini-copy{margin:8px 0 0;color:var(--muted);font-size:14px}
+    .actions{
+      margin-top:18px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      min-height:42px;
+      padding:10px 16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:1px solid var(--tea);
+      background:var(--tea);
+      color:#fff;
+      text-decoration:none;
+      cursor:pointer;
+      font-weight:620;
+      line-height:1.2;
+    }
+    .btn:hover{background:var(--tea-dark);border-color:var(--tea-dark)}
+    .btn.secondary{
+      background:var(--surface);
+      color:var(--ink);
+      border-color:var(--line-strong);
+    }
+    .btn.secondary:hover{background:var(--paper-2)}
+    .btn.ghost{
+      background:transparent;
+      color:var(--muted);
+      border-color:var(--line);
+    }
+    .btn.ghost:hover{color:var(--ink);background:rgba(255,255,255,.55)}
+    .btn.moss{background:var(--moss);border-color:var(--moss)}
+    .btn.indigo{background:var(--indigo);border-color:var(--indigo)}
+    .btn.danger{background:var(--red);border-color:var(--red)}
+    .btn:disabled{opacity:.52;cursor:not-allowed}
+
+    .star-map{
+      min-height:230px;
+      border:1px solid rgba(64,94,124,.22);
+      background:
+        radial-gradient(circle at 18% 24%, var(--star) 0 3px, transparent 4px),
+        radial-gradient(circle at 42% 38%, rgba(79,122,90,.85) 0 3px, transparent 4px),
+        radial-gradient(circle at 72% 24%, rgba(199,154,67,.9) 0 3px, transparent 4px),
+        radial-gradient(circle at 78% 72%, rgba(64,94,124,.72) 0 3px, transparent 4px),
+        linear-gradient(128deg,transparent 0 24%,rgba(64,94,124,.16) 24.2%,transparent 24.7% 100%),
+        linear-gradient(34deg,transparent 0 50%,rgba(183,102,60,.12) 50.2%,transparent 50.6% 100%),
+        #fffaf2;
+      position:relative;
+      overflow:hidden;
+      padding:18px;
+    }
+    .star-map::after{
+      content:"第 07 期 · 月见 · 待回应";
+      position:absolute;
+      left:18px;
+      bottom:18px;
+      padding:7px 10px;
+      background:rgba(255,253,248,.86);
+      border:1px solid var(--line);
+      font-family:var(--mono);
+      font-size:11px;
+      color:var(--indigo);
+      letter-spacing:.04em;
+    }
+    .map-title{
+      font-family:var(--serif);
+      font-size:23px;
+      max-width:240px;
+      line-height:1.25;
+    }
+    .map-note{margin-top:8px;color:var(--muted);font-size:13px;max-width:260px}
+
+    .progress{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      margin:22px 0;
+    }
+    .step{
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.75);
+      padding:10px 12px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .step b{
+      display:block;
+      font-family:var(--mono);
+      font-size:10px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--faint);
+      margin-bottom:3px;
+    }
+    .step.on{
+      color:var(--ink);
+      border-color:rgba(183,102,60,.45);
+      background:#fff1e8;
+    }
+    .step.done{
+      color:var(--moss);
+      border-color:rgba(79,122,90,.35);
+      background:var(--moss-soft);
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+    .form-grid.two{grid-template-columns:repeat(2,1fr)}
+    .field{display:flex;flex-direction:column;gap:6px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--ink);
+      min-height:42px;
+      padding:10px 12px;
+      outline:none;
+      border-radius:0;
+    }
+    textarea{resize:vertical;min-height:98px;line-height:1.55}
+    input:focus,select:focus,textarea:focus{border-color:var(--tea);box-shadow:0 0 0 3px rgba(183,102,60,.12)}
+    .mono{font-family:var(--mono)}
+    .hint{font-size:12px;color:var(--faint)}
+    .message{
+      margin-top:14px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--muted);
+      font-size:14px;
+    }
+    .message.error{background:var(--red-soft);border-color:rgba(165,72,63,.35);color:var(--red)}
+    .message.ok{background:var(--moss-soft);border-color:rgba(79,122,90,.35);color:var(--moss)}
+    .message.warn{background:#fff1e8;border-color:rgba(183,102,60,.32);color:var(--tea-dark)}
+    .hidden{display:none!important}
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+    .section-head p{margin:7px 0 0;color:var(--muted)}
+    .identity-card{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(135deg,#fffdf8,#f5efe4);
+      border:1px solid var(--line);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .avatar{
+      width:58px;
+      height:58px;
+      border:1.5px solid var(--line-strong);
+      background:var(--surface);
+      display:grid;
+      place-items:center;
+      font-family:var(--serif);
+      color:var(--tea);
+      font-size:25px;
+      position:relative;
+    }
+    .avatar::after{
+      content:"";
+      width:8px;height:8px;border-radius:50%;
+      background:var(--star);
+      position:absolute;right:8px;top:9px;
+    }
+    .identity-card h3{font-family:var(--serif);font-size:25px}
+    .identity-card .meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px}
+
+    .data-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+    .data-item{
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.66);
+      padding:12px;
+      min-height:74px;
+    }
+    .data-item .k{font-size:12px;color:var(--muted);margin-bottom:5px}
+    .data-item .v{font-size:15px;word-break:break-word}
+    .data-item .empty{color:var(--faint);font-style:italic}
+
+    .question{
+      border-top:1px dashed var(--line);
+      padding-top:22px;
+      margin-top:22px;
+    }
+    .q-label{
+      font-family:var(--mono);
+      font-size:11px;
+      color:var(--tea);
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:6px;
+    }
+    .question h3{font-family:var(--serif);font-size:22px;font-weight:600}
+    .options{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+    .option{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      padding:11px 12px;
+      cursor:pointer;
+      min-height:48px;
+    }
+    .option:hover{border-color:var(--tea);background:#fff8ef}
+    .option input{width:auto;min-height:0;accent-color:var(--tea)}
+
+    .done-hero{
+      text-align:center;
+      padding:44px 28px;
+      background:rgba(255,253,248,.9);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+    .done-mark{
+      width:74px;height:74px;margin:0 auto 18px;
+      border:1.5px solid var(--moss);
+      background:var(--moss-soft);
+      display:grid;place-items:center;
+      color:var(--moss);
+      font-family:var(--serif);
+      font-size:38px;
+      position:relative;
+    }
+    .done-mark::after{
+      content:"";
+      width:8px;height:8px;border-radius:50%;
+      background:var(--star);
+      position:absolute;right:12px;top:12px;
+    }
+
+    .admin-shell{
+      display:grid;
+      grid-template-columns:250px minmax(0,1fr);
+      gap:22px;
+      align-items:start;
+      min-width:0;
+    }
+    .admin-shell > *{min-width:0}
+    .admin-side{
+      position:sticky;
+      top:88px;
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.86);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .admin-side .title{
+      padding:8px 10px 14px;
+      border-bottom:1px solid var(--line);
+      margin-bottom:10px;
+    }
+    .admin-side .title b{display:block;font-family:var(--serif);font-size:21px}
+    .admin-side .title span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+    .admin-nav{display:flex;flex-direction:column;gap:5px}
+    .admin-nav button{
+      width:100%;
+      min-height:38px;
+      text-align:left;
+      padding:8px 10px;
+      background:transparent;
+      color:var(--muted);
+      border:1px solid transparent;
+      cursor:pointer;
+    }
+    .admin-nav button:hover,.admin-nav button.on{
+      color:var(--ink);
+      background:var(--indigo-soft);
+      border-color:rgba(64,94,124,.22);
+    }
+    .admin-panel{display:none}
+    .admin-panel.active{display:block;animation:rise .2s ease-out}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+    }
+    .stat{
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.88);
+      padding:16px;
+      min-height:112px;
+    }
+    .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .stat .v{font-family:var(--serif);font-size:36px;line-height:1;margin-top:10px}
+    .stat .d{font-size:12px;color:var(--muted);margin-top:7px}
+    .stat .v em{font-style:normal;color:var(--tea)}
+    .switch-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin:16px 0;
+    }
+    .switch-card{
+      border:1px solid var(--line);
+      background:var(--surface);
+      padding:16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+    }
+    .toggle{
+      width:54px;height:30px;border-radius:999px;
+      background:var(--line);
+      position:relative;
+      flex:0 0 auto;
+      cursor:pointer;
+      border:1px solid rgba(47,42,36,.12);
+    }
+    .toggle::after{
+      content:"";
+      position:absolute;
+      width:24px;height:24px;border-radius:50%;
+      background:#fff;
+      left:2px;top:2px;
+      box-shadow:0 2px 8px rgba(0,0,0,.16);
+      transition:.18s;
+    }
+    .toggle.on{background:var(--moss)}
+    .toggle.on::after{left:26px}
+
+    .table{
+      border:1px solid var(--line);
+      background:rgba(255,253,248,.84);
+      overflow:auto;
+      width:100%;
+      max-width:100%;
+    }
+    table{width:100%;border-collapse:collapse;min-width:720px}
+    th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+    th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--surface-2);font-weight:600}
+    tr:hover td{background:#fff8ef}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      min-height:22px;
+      padding:3px 7px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--muted);
+      font-size:12px;
+      margin:0 4px 4px 0;
+      white-space:nowrap;
+    }
+    .tag.moss{color:var(--moss);background:var(--moss-soft);border-color:rgba(79,122,90,.25)}
+    .tag.gold{color:#7b5b17;background:var(--gold-soft);border-color:rgba(199,154,67,.28)}
+    .tag.indigo{color:var(--indigo);background:var(--indigo-soft);border-color:rgba(64,94,124,.22)}
+    .tag.red{color:var(--red);background:var(--red-soft);border-color:rgba(165,72,63,.24)}
+    .filters{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:0 0 14px;
+      align-items:center;
+    }
+    .filters input,.filters select{max-width:240px;min-width:150px}
+    .task-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    .task{
+      border:1px solid var(--line);
+      background:var(--surface);
+      padding:14px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .task b{display:block;margin-bottom:3px}
+    .task span{font-size:13px;color:var(--muted)}
+
+    .drawer{
+      position:fixed;
+      right:0;top:0;bottom:0;
+      width:min(520px,94vw);
+      background:var(--paper);
+      border-left:1.5px solid var(--line-strong);
+      z-index:90;
+      transform:translateX(105%);
+      transition:.22s ease-out;
+      box-shadow:-18px 0 50px rgba(52,45,36,.18);
+      overflow:auto;
+    }
+    .drawer.on{transform:none}
+    .drawer-head{
+      position:sticky;top:0;
+      background:rgba(251,248,240,.92);
+      backdrop-filter:blur(14px);
+      padding:20px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .drawer-body{padding:20px}
+    .drawer-close{background:transparent;color:var(--muted);cursor:pointer;border:1px solid var(--line);padding:6px 9px}
+
+    @media (max-width:900px){
+      .topbar-inner{align-items:flex-start;flex-direction:column}
+      .nav{justify-content:flex-start}
+      .hero{grid-template-columns:1fr}
+      .form-grid,.form-grid.two,.data-grid,.options,.stats,.switch-grid,.task-list{grid-template-columns:1fr}
+      .admin-shell{grid-template-columns:1fr}
+      .admin-side{position:static}
+      .admin-nav{display:grid;grid-template-columns:repeat(2,1fr)}
+      .progress{grid-template-columns:repeat(2,1fr)}
+      .identity-card{grid-template-columns:auto 1fr}
+      .identity-card .actions{grid-column:1 / -1}
+    }
+    @media (max-width:560px){
+      .wrap{padding:22px 14px 56px}
+      .letter-panel,.card{padding:18px}
+      h1{font-size:38px}
+      .nav button{font-size:12px;padding:0 8px}
+      .admin-nav{grid-template-columns:1fr}
+      .options{grid-template-columns:1fr}
+      .btn{width:100%}
+      .actions{align-items:stretch}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#home" data-route="home" aria-label="回到首页">
+          <span class="seal">见</span>
+          <span class="brand-title">
+            <b>创见星图</b>
+            <span>Csight yearly starmap</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="主要导航">
+          <button data-route="home" class="on">公开信</button>
+          <button data-route="verify">身份核验</button>
+          <button data-route="contact">联系方式</button>
+          <button data-route="survey">年度问卷</button>
+          <button data-route="done">完成页</button>
+          <button data-route="admin-login" class="admin-entry">管理后台</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="page active">
+        <div class="wrap">
+          <div class="status-strip">
+            <span class="status-pill open">采集中</span>
+            <span class="chip gold">2025 星图更新</span>
+            <span class="chip indigo">问卷截止 2025-12-31</span>
+            <span class="chip moss">通讯录全年开放</span>
+          </div>
+
+          <div class="hero">
+            <article class="letter-panel">
+              <div class="kicker">A letter from Csight</div>
+              <h1>重新点亮<br>这张星图</h1>
+              <p class="sub">一次给老朋友的年度问候，也是一张创见者星图的重新点亮。</p>
+
+              <div class="letter-body">
+                <p class="salu">亲爱的创见老朋友：</p>
+                <p>这一年，我们又见证了一批星星完成自己的慢炖旅程。有人从迷茫里走向行动，有人把心里的愿望做成真实项目，也有人重新找到了与世界连接的方式。</p>
+                <p>创见一直不是一张简单的名单。它更像一片星图：每个人都曾在某个时刻发光，也可能在另一个时刻照亮别人。</p>
+                <p>所以今年，我们想邀请你回来确认一次自己的位置。<span class="hl">告诉我们你现在在哪里、正在经历什么、还愿意怎样与创见相互看见。</span></p>
+                <p>你可以只花一分钟确认联系方式，也可以再多留几分钟，回应这份年度问卷。所有内容仅供组织内部连接与活动设计使用，不会公开展示。</p>
+                <p>愿我们在新的年份里，仍然可以找到彼此。</p>
+                <div class="sig">
+                  创见 · 年度星图更新
+                  <small>二〇二五年冬 · 于线上</small>
+                </div>
+              </div>
+            </article>
+
+            <aside class="side-stack">
+              <div class="card cta-card">
+                <h3>从确认你的位置开始</h3>
+                <p class="mini-copy">确认资料约 1 分钟，完整回应约 5 分钟。</p>
+                <div class="actions">
+                  <button class="btn" data-route="verify">开始确认资料</button>
+                  <button class="btn secondary" data-route="recover">我遇到核验问题</button>
+                </div>
+              </div>
+
+              <div class="star-map" aria-label="创见星图装饰">
+                <div class="map-title">第 07 期 · 月见的位置还待回应</div>
+                <div class="map-note">确认后，这一格会被重新点亮；主理人也能知道今年是否还能联系到你。</div>
+              </div>
+
+              <div class="card flat">
+                <div class="kicker">Current rhythm</div>
+                <div class="data-grid">
+                  <div class="data-item">
+                    <div class="k">问卷</div>
+                    <div class="v">开放中</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">通讯录</div>
+                    <div class="v">可更新</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">已点亮</div>
+                    <div class="v mono">47 / 112</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">人工恢复</div>
+                    <div class="v mono">3 待处理</div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="verify" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 01 · Find your star</div>
+              <h2>先找到你在创见星图里的位置</h2>
+              <p>期数、精灵名和手机号只用于身份核验。换过手机号或忘记精灵名也没关系，可以走人工恢复。</p>
+            </div>
+          </div>
+          <div class="progress">
+            <div class="step on"><b>01</b>身份核验</div>
+            <div class="step"><b>02</b>确认资料</div>
+            <div class="step"><b>03</b>年度回应</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+          <div class="card">
+            <div class="form-grid">
+              <div class="field">
+                <label for="v-cohort">所在期数</label>
+                <select id="v-cohort">
+                  <option>第 01 期</option><option>第 02 期</option><option>第 03 期</option>
+                  <option>第 04 期</option><option>第 05 期</option><option>第 06 期</option>
+                  <option selected>第 07 期</option><option>第 08 期</option><option>第 09 期</option>
+                  <option>第 10 期</option><option>第 11 期</option><option>不确定</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="v-name">精灵名 / 常用称呼</label>
+                <input id="v-name" value="月见" placeholder="如：月见">
+              </div>
+              <div class="field">
+                <label for="v-phone">手机号</label>
+                <input id="v-phone" class="mono" maxlength="11" value="13888888821" placeholder="11 位手机号">
+                <span class="hint">示例中任意 11 位手机号可继续流程。</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" id="verifyBtn">找到我的星位</button>
+              <button class="btn ghost" data-route="recover">我换手机号 / 忘记精灵名</button>
+            </div>
+            <div id="verifyMsg" class="message hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 02 · Contact starmap</div>
+              <h2>确认一下，今年还能怎样找到你</h2>
+              <p>这些信息只在组织内部用于联络、活动邀请和星图连接，不会公开展示。</p>
+            </div>
+            <span class="status-pill open">通讯录开放</span>
+          </div>
+          <div class="progress">
+            <div class="step done"><b>01</b>身份核验</div>
+            <div class="step on"><b>02</b>确认资料</div>
+            <div class="step"><b>03</b>年度回应</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+
+          <div class="identity-card">
+            <div class="avatar">月</div>
+            <div>
+              <h3>月见 · 陈若晗</h3>
+              <div class="meta">第 07 期星星 · 1st JOB / 百宝乡 · 上次确认 2024-03-12</div>
+            </div>
+            <div class="actions">
+              <button class="btn moss" id="confirmContactBtn">信息无误</button>
+              <button class="btn secondary" id="editContactBtn">我要修改</button>
+            </div>
+          </div>
+
+          <div id="contactView" class="card">
+            <div class="data-grid">
+              <div class="data-item"><div class="k">手机号</div><div class="v mono">138 8888 8821</div></div>
+              <div class="data-item"><div class="k">微信号</div><div class="v mono">moonsee_88</div></div>
+              <div class="data-item"><div class="k">邮箱</div><div class="v mono">moon@example.com</div></div>
+              <div class="data-item"><div class="k">城市</div><div class="v">上海</div></div>
+              <div class="data-item"><div class="k">公司 / 角色</div><div class="v">自由职业 · 内容策划</div></div>
+              <div class="data-item"><div class="k">行业</div><div class="v">教育 / 内容</div></div>
+              <div class="data-item"><div class="k">创见身份</div><div class="v">星星 · 志愿编辑</div></div>
+              <div class="data-item"><div class="k">参与项目</div><div class="v">1st JOB、百宝乡、创见书架</div></div>
+              <div class="data-item"><div class="k">技能 / 可分享主题</div><div class="v">写作、产品策划、叙事访谈</div></div>
+              <div class="data-item"><div class="k">联系偏好</div><div class="v">可以联系，愿意被介绍给同频伙伴</div></div>
+            </div>
+          </div>
+
+          <div id="contactEdit" class="card hidden">
+            <div class="form-grid two">
+              <div class="field"><label>手机号</label><input class="mono" value="13888888821"></div>
+              <div class="field"><label>微信号</label><input class="mono" value="moonsee_88"></div>
+              <div class="field"><label>城市</label><input value="上海"></div>
+              <div class="field"><label>公司 / 角色</label><input value="自由职业 · 内容策划"></div>
+              <div class="field"><label>创见身份</label><select><option>星星 · 志愿编辑</option><option>馒头 Mentor</option><option>项目伙伴</option></select></div>
+              <div class="field"><label>参与项目</label><input value="1st JOB、百宝乡、创见书架"></div>
+              <div class="field"><label>是否愿意支持下一届</label><select><option>愿意分享</option><option>愿意做小组陪伴</option><option>暂时不确定</option></select></div>
+              <div class="field"><label>联系偏好</label><select><option>可以联系，愿意被介绍</option><option>少联系</option><option>暂不参加活动</option></select></div>
+            </div>
+            <div class="field" style="margin-top:14px">
+              <label>想对创见说的话</label>
+              <textarea>今年换了工作节奏，想重新找回稳定表达，也愿意参与一次线上分享。</textarea>
+            </div>
+            <div class="message warn">如果修改手机号，下次需要用新手机号核验。请确认这是你常用的联系方式。</div>
+            <div class="actions">
+              <button class="btn moss" id="saveContactBtn">保存修改</button>
+              <button class="btn ghost" id="cancelContactBtn">取消</button>
+            </div>
+          </div>
+
+          <div id="contactMsg" class="message ok hidden"></div>
+          <div id="contactNextActions" class="actions hidden" style="margin-top:14px">
+            <button class="btn" data-route="survey">继续填写年度问卷</button>
+            <button class="btn secondary" data-route="done">我今天先到这里</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="survey" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 03 · Yearly echo</div>
+              <h2>几个不长的问题，听听你今年的回声</h2>
+              <p>问题不多，主理人会用它来设计今年的活动、连接和支持方式。</p>
+            </div>
+            <span class="status-pill open">问卷开放</span>
+          </div>
+          <div class="progress">
+            <div class="step done"><b>01</b>身份核验</div>
+            <div class="step done"><b>02</b>确认资料</div>
+            <div class="step on"><b>03</b>年度回应</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+
+          <form id="surveyForm" class="card">
+            <div class="question" style="border-top:0;margin-top:0;padding-top:0">
+              <div class="q-label">Q1 · 单选</div>
+              <h3>今年你的状态更接近哪一种？</h3>
+              <div class="options">
+                <label class="option"><input type="radio" name="q1" checked> 稳定前行</label>
+                <label class="option"><input type="radio" name="q1"> 正在转身</label>
+                <label class="option"><input type="radio" name="q1"> 探索新方向</label>
+                <label class="option"><input type="radio" name="q1"> 需要休整</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">Q2 · 多选</div>
+              <h3>如果用创见的话说，今年你更想被怎样支持？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" checked> 自我探索</label>
+                <label class="option"><input type="checkbox"> 职业 / 事业转型</label>
+                <label class="option"><input type="checkbox" checked> 真实同伴关系</label>
+                <label class="option"><input type="checkbox"> 资源链接</label>
+                <label class="option"><input type="checkbox"> 表达与输出</label>
+                <label class="option"><input type="checkbox"> 暂时只是回来看看</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">Q3 · 多选</div>
+              <h3>你愿意贡献哪些能量？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" checked> 主题分享</label>
+                <label class="option"><input type="checkbox"> 推荐书 / 文章</label>
+                <label class="option"><input type="checkbox"> 内容写作 / 编辑</label>
+                <label class="option"><input type="checkbox" checked> 下一届星星陪伴</label>
+                <label class="option"><input type="checkbox"> 场地 / 城市召集</label>
+                <label class="option"><input type="checkbox"> 暂时没有</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">Q4 · 简答</div>
+              <h3>最近一年你最想被理解的一件事是什么？</h3>
+              <textarea>我在重新学习如何把节奏放慢，也想把过去几年做内容和访谈的经验整理出来，和更多同频的人交流。</textarea>
+            </div>
+
+            <div class="question">
+              <div class="q-label">Q5 · 简答</div>
+              <h3>如果创见今年只做一件事，你希望它是什么？</h3>
+              <textarea placeholder="写一句真实的就好"></textarea>
+            </div>
+
+            <div class="actions">
+              <button class="btn" type="submit">提交年度回声</button>
+              <button class="btn ghost" type="button" id="saveDraftBtn">保存草稿</button>
+              <span class="hint">截止前可再次回来修改。</span>
+            </div>
+            <div id="draftMsg" class="message ok hidden">草稿已保存在这个浏览器里。</div>
+          </form>
+        </div>
+      </section>
+
+      <section id="done" class="page">
+        <div class="wrap narrow">
+          <div class="done-hero">
+            <div class="done-mark">见</div>
+            <div class="kicker">Completed</div>
+            <h2>收到。今年的创见星图已经因你重新亮起一格。</h2>
+            <p class="sub" style="margin-left:auto;margin-right:auto">你已完成本次确认。若也提交了年度回声，主理人会把它用于今年的活动设计和连接支持。</p>
+            <div class="actions" style="justify-content:center">
+              <button class="btn" data-route="home">回到公开信</button>
+              <button class="btn secondary" data-route="contact">修改联系方式</button>
+              <button class="btn ghost" data-route="survey">修改问卷</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recover" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Recovery</div>
+              <h2>找不到记录时，交给主理人核对</h2>
+              <p>手机号换了、精灵名记不清、期数不确定，都可以从这里提交。不会自动展示任何旧资料。</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="form-grid two">
+              <div class="field"><label>真实姓名</label><input value="陈若晗"></div>
+              <div class="field"><label>可能的精灵名</label><input value="月见"></div>
+              <div class="field"><label>所在期数</label><select><option>第 07 期</option><option>不确定</option></select></div>
+              <div class="field"><label>当前手机号</label><input class="mono" value="13900112233"></div>
+              <div class="field"><label>旧手机号 / 微信 / 邮箱任一</label><input value="moonsee_88"></div>
+              <div class="field"><label>希望管理员如何联系你</label><select><option>微信优先</option><option>电话优先</option><option>邮箱优先</option></select></div>
+            </div>
+            <div class="field" style="margin-top:14px"><label>补充说明</label><textarea>我换过手机号，可能旧名单里还是之前的号码。</textarea></div>
+            <div class="actions">
+              <button class="btn" id="recoverBtn">提交人工恢复</button>
+              <button class="btn ghost" data-route="verify">返回核验</button>
+            </div>
+            <div id="recoverMsg" class="message ok hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-login" class="page">
+        <div class="wrap narrow">
+          <div class="card" style="max-width:460px;margin:40px auto">
+            <div class="kicker">Admin</div>
+            <h2>进入创见星图管理后台</h2>
+            <p class="mini-copy">管理年度采集、名单、结果、恢复请求和导出。</p>
+            <div class="field" style="margin-top:20px">
+              <label>管理密码</label>
+              <input id="adminPwd" type="password" value="csight" autocomplete="current-password">
+            </div>
+            <div class="actions">
+              <button class="btn indigo" id="loginBtn">进入后台</button>
+              <button class="btn ghost" data-route="home">返回公开页</button>
+            </div>
+            <div id="loginMsg" class="message error hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin" class="page">
+        <div class="wrap">
+          <div class="admin-shell">
+            <aside class="admin-side">
+              <div class="title">
+                <b>创见 Admin</b>
+                <span>2025 starmap update</span>
+              </div>
+              <nav class="admin-nav">
+                <button data-admin="dash" class="on">控制台</button>
+                <button data-admin="campaign">年度设置</button>
+                <button data-admin="members">同学名单</button>
+                <button data-admin="responses">问卷结果</button>
+                <button data-admin="contacts">通讯录</button>
+                <button data-admin="recovery">恢复请求</button>
+                <button data-admin="exports">导出中心</button>
+              </nav>
+            </aside>
+
+            <div>
+              <div id="admin-dash" class="admin-panel active">
+                <div class="section-head">
+                  <div>
+                    <div class="kicker">Dashboard</div>
+                    <h2>2025 星图更新控制台</h2>
+                    <p>先看状态，再处理待办。每个数字都对应一个后续动作。</p>
+                  </div>
+                  <span class="status-pill open">采集中</span>
+                </div>
+                <div class="switch-grid">
+                  <div class="switch-card">
+                    <div><b>接受问卷提交</b><div class="mini-copy">截止至 2025-12-31</div></div>
+                    <button class="toggle on" aria-label="接受问卷提交"></button>
+                  </div>
+                  <div class="switch-card">
+                    <div><b>接受通讯录更新</b><div class="mini-copy">建议全年开放</div></div>
+                    <button class="toggle on" aria-label="接受通讯录更新"></button>
+                  </div>
+                </div>
+                <div class="stats">
+                  <div class="stat"><div class="k">已点亮</div><div class="v"><em>47</em></div><div class="d">112 位成员 · 42%</div></div>
+                  <div class="stat"><div class="k">已确认资料</div><div class="v">63</div><div class="d">本年度有效确认</div></div>
+                  <div class="stat"><div class="k">愿意分享/陪伴</div><div class="v">18</div><div class="d">可成为下一届支持者</div></div>
+                  <div class="stat"><div class="k">恢复请求</div><div class="v">3</div><div class="d">手机号/精灵名待核对</div></div>
+                </div>
+                <div class="task-list">
+                  <div class="task"><div><b>3 个恢复请求待处理</b><span>优先处理手机号变更，避免老同学进不来。</span></div><button class="btn ghost" data-admin="recovery">处理</button></div>
+                  <div class="task"><div><b>49 位同学尚未确认资料</b><span>可导出提醒名单给主理人逐个联系。</span></div><button class="btn ghost" data-admin="exports">导出</button></div>
+                  <div class="task"><div><b>18 位同学愿意分享或陪伴</b><span>适合作为活动嘉宾、下一届星星陪伴者。</span></div><button class="btn ghost" data-admin="responses">查看</button></div>
+                  <div class="task"><div><b>问卷将在 28 天后截止</b><span>截止前可再发一次温和提醒。</span></div><button class="btn ghost" data-admin="campaign">设置</button></div>
+                </div>
+              </div>
+
+              <div id="admin-campaign" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Campaign</div><h2>年度设置</h2><p>控制今年的名称、主题、开放状态和截止时间。</p></div></div>
+                <div class="card">
+                  <div class="form-grid two">
+                    <div class="field"><label>年度名称</label><input value="2025 创见星图更新"></div>
+                    <div class="field"><label>年度主题</label><input value="重新点亮这张星图"></div>
+                    <div class="field"><label>问卷截止时间</label><input type="date" value="2025-12-31"></div>
+                    <div class="field"><label>管理员微信</label><input value="chuangjian_admin"></div>
+                  </div>
+                  <div class="field" style="margin-top:14px"><label>公开页短说明</label><textarea>一次给老朋友的年度问候，也是一张创见者星图的重新点亮。</textarea></div>
+                  <div class="actions"><button class="btn indigo">保存设置</button><button class="btn secondary" data-route="home">预览公开页</button><button class="btn danger">截止问卷</button></div>
+                </div>
+              </div>
+
+              <div id="admin-members" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Members</div><h2>同学名单</h2><p>核验依据、成员状态和今年是否回应。</p></div><button class="btn indigo">导入 CSV</button></div>
+                <div class="filters"><input placeholder="搜索精灵名、姓名、手机号"><select><option>全部期数</option><option>第 07 期</option></select><select><option>全部身份</option><option>星星</option><option>馒头</option></select></div>
+                <div class="table">
+                  <table>
+                    <thead><tr><th>期数</th><th>精灵名 / 姓名</th><th>创见身份</th><th>参与项目</th><th>今年状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                      <tr><td class="mono">07</td><td>月见 · 陈若晗</td><td><span class="tag gold">星星</span></td><td>1st JOB、百宝乡</td><td><span class="tag moss">已点亮</span></td><td><button class="btn ghost drawer-open" data-person="月见">查看</button></td></tr>
+                      <tr><td class="mono">09</td><td>阿岩 · 张岚</td><td><span class="tag indigo">馒头</span></td><td>1st JOB、时不我待</td><td><span class="tag moss">愿意陪伴</span></td><td><button class="btn ghost drawer-open" data-person="阿岩">查看</button></td></tr>
+                      <tr><td class="mono">04</td><td>小满 · 王安</td><td><span class="tag">亲友</span></td><td>创见书架</td><td><span class="tag red">两年未确认</span></td><td><button class="btn ghost drawer-open" data-person="小满">查看</button></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-responses" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Responses</div><h2>问卷结果</h2><p>不只看统计，也看见每个人今年正在经历什么。</p></div></div>
+                <div class="stats">
+                  <div class="stat"><div class="k">探索新方向</div><div class="v">21</div><div class="d">最常见状态</div></div>
+                  <div class="stat"><div class="k">需要真实同伴</div><div class="v"><em>28</em></div><div class="d">最常见支持需求</div></div>
+                  <div class="stat"><div class="k">愿意主题分享</div><div class="v">12</div><div class="d">可邀请嘉宾</div></div>
+                  <div class="stat"><div class="k">想重新连接</div><div class="v">16</div><div class="d">适合私聊跟进</div></div>
+                </div>
+                <div class="table" style="margin-top:14px">
+                  <table>
+                    <thead><tr><th>成员</th><th>状态</th><th>想被支持</th><th>愿意贡献</th><th>一句话</th></tr></thead>
+                    <tbody>
+                      <tr><td>月见</td><td>探索新方向</td><td>真实同伴关系</td><td><span class="tag moss">主题分享</span><span class="tag gold">陪伴下一届</span></td><td>想把访谈经验整理出来。</td></tr>
+                      <tr><td>阿岩</td><td>稳定前行</td><td>资源链接</td><td><span class="tag moss">商业经验</span></td><td>愿意给 12 期星星做一次项目复盘。</td></tr>
+                      <tr><td>林深</td><td>正在转身</td><td>职业转型</td><td><span class="tag">暂不确定</span></td><td>从设计转向 AIGC 创作。</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-contacts" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Contacts</div><h2>通讯录 / 创见星图</h2><p>当前可抵达的人、城市、项目、可连接方向。</p></div></div>
+                <div class="filters"><input placeholder="搜索城市、技能、微信"><select><option>全部项目</option><option>1st JOB</option><option>百宝乡</option></select><select><option>全部联系偏好</option><option>愿意被介绍</option><option>少联系</option></select></div>
+                <div class="table">
+                  <table>
+                    <thead><tr><th>成员</th><th>城市</th><th>联系方式</th><th>项目</th><th>可分享主题</th><th>联系偏好</th></tr></thead>
+                    <tbody>
+                      <tr><td>月见</td><td>上海</td><td class="mono">moonsee_88</td><td>1st JOB、百宝乡</td><td>写作、产品策划</td><td><span class="tag moss">愿意被介绍</span></td></tr>
+                      <tr><td>阿岩</td><td>杭州</td><td class="mono">ayan_rocks</td><td>时不我待</td><td>空间运营、商业模型</td><td><span class="tag moss">可以联系</span></td></tr>
+                      <tr><td>小满</td><td>北京</td><td class="mono">待确认</td><td>创见书架</td><td>公益图书馆</td><td><span class="tag red">待恢复</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-recovery" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Recovery</div><h2>人工恢复请求</h2><p>处理手机号变更、精灵名不一致和期数不确定。</p></div></div>
+                <div class="table">
+                  <table>
+                    <thead><tr><th>提交人</th><th>线索</th><th>可能匹配</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                      <tr><td>陈若晗</td><td>旧微信 moonsee_88</td><td>第 07 期 · 月见</td><td><span class="tag gold">待处理</span></td><td><button class="btn ghost">通过并更新手机号</button></td></tr>
+                      <tr><td>王安</td><td>不确定期数</td><td>第 04 期 · 小满</td><td><span class="tag red">需补充</span></td><td><button class="btn ghost">请求补充</button></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-exports" class="admin-panel">
+                <div class="section-head"><div><div class="kicker">Exports</div><h2>导出中心</h2><p>先选范围和字段，再确认是否包含敏感联系方式。</p></div></div>
+                <div class="card">
+                  <div class="form-grid two">
+                    <div class="field"><label>导出类型</label><select><option>未确认联系方式名单</option><option>问卷结果</option><option>完整通讯录</option><option>愿意分享/陪伴名单</option></select></div>
+                    <div class="field"><label>范围</label><select><option>2025 年度 · 全部期数</option><option>第 07 期</option><option>第 11 期</option></select></div>
+                    <div class="field"><label>敏感字段</label><select><option>包含手机号 / 微信 / 邮箱</option><option>仅姓名和状态</option></select></div>
+                    <div class="field"><label>文件格式</label><select><option>CSV · Excel 可打开</option><option>JSON</option></select></div>
+                  </div>
+                  <div class="message warn">将导出 49 条记录，包含手机号和微信号。导出会写入管理员操作记录。</div>
+                  <div class="actions"><button class="btn indigo">下载 CSV</button><button class="btn secondary">复制提醒名单</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="drawer" class="drawer" aria-label="成员详情">
+      <div class="drawer-head">
+        <div>
+          <div class="kicker">Member detail</div>
+          <h3 id="drawerTitle">月见 · 陈若晗</h3>
+          <p class="mini-copy">第 07 期星星 · 已完成 2025 星图更新</p>
+        </div>
+        <button class="drawer-close" id="drawerClose">关闭</button>
+      </div>
+      <div class="drawer-body">
+        <div class="data-grid">
+          <div class="data-item"><div class="k">微信</div><div class="v mono">moonsee_88</div></div>
+          <div class="data-item"><div class="k">城市</div><div class="v">上海</div></div>
+          <div class="data-item"><div class="k">参与项目</div><div class="v">1st JOB、百宝乡</div></div>
+          <div class="data-item"><div class="k">愿意贡献</div><div class="v">主题分享、陪伴下一届</div></div>
+        </div>
+        <div class="card flat" style="margin-top:14px">
+          <h3>今年的回声</h3>
+          <p class="mini-copy">想把过去几年做内容和访谈的经验整理出来，和更多同频的人交流。</p>
+        </div>
+        <div class="card flat" style="margin-top:14px">
+          <h3>修改历史</h3>
+          <p class="mini-copy mono">2025-11-20 · 确认资料 · 手机号未变更</p>
+          <p class="mini-copy mono">2024-03-12 · 更新城市 · 北京 → 上海</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const pages = Array.from(document.querySelectorAll('.page'));
+    const navButtons = Array.from(document.querySelectorAll('[data-route]'));
+    const adminButtons = Array.from(document.querySelectorAll('[data-admin]'));
+    const adminPanels = Array.from(document.querySelectorAll('.admin-panel'));
+    const state = { verified:false, contactConfirmed:false, surveyDone:false, admin:false };
+
+    function route(name){
+      pages.forEach(page => page.classList.toggle('active', page.id === name));
+      navButtons.forEach(btn => btn.classList.toggle('on', btn.dataset.route === name));
+      if(name === 'admin') {
+        navButtons.forEach(btn => btn.classList.remove('on'));
+        document.querySelector('[data-route="admin-login"]').classList.add('on');
+      }
+      window.location.hash = name;
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function adminView(name){
+      adminPanels.forEach(panel => panel.classList.toggle('active', panel.id === 'admin-' + name));
+      adminButtons.forEach(btn => btn.classList.toggle('on', btn.dataset.admin === name));
+    }
+
+    navButtons.forEach(btn => btn.addEventListener('click', e => {
+      const target = e.currentTarget.dataset.route;
+      route(target);
+    }));
+    adminButtons.forEach(btn => btn.addEventListener('click', e => {
+      const name = e.currentTarget.dataset.admin;
+      if(document.getElementById('admin-' + name)) adminView(name);
+    }));
+    document.querySelectorAll('.toggle').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('on')));
+
+    document.getElementById('verifyBtn').addEventListener('click', () => {
+      const name = document.getElementById('v-name').value.trim();
+      const phone = document.getElementById('v-phone').value.trim();
+      const msg = document.getElementById('verifyMsg');
+      msg.className = 'message';
+      if(!name || phone.length !== 11){
+        msg.classList.add('error');
+        msg.textContent = '暂时没有匹配到记录，可能是期数、昵称或手机号有变化。你可以再试一次，或提交人工恢复。';
+        return;
+      }
+      state.verified = true;
+      msg.classList.add('ok');
+      msg.textContent = '找到你了：月见 · 第 07 期。正在进入资料确认。';
+      setTimeout(() => route('contact'), 520);
+    });
+
+    document.getElementById('editContactBtn').addEventListener('click', () => {
+      document.getElementById('contactView').classList.add('hidden');
+      document.getElementById('contactEdit').classList.remove('hidden');
+      document.getElementById('contactMsg').classList.add('hidden');
+      document.getElementById('contactNextActions').classList.add('hidden');
+    });
+    document.getElementById('cancelContactBtn').addEventListener('click', () => {
+      document.getElementById('contactView').classList.remove('hidden');
+      document.getElementById('contactEdit').classList.add('hidden');
+    });
+    function contactDone(copy){
+      state.contactConfirmed = true;
+      const msg = document.getElementById('contactMsg');
+      msg.className = 'message ok';
+      msg.textContent = copy + ' 你可以继续填写年度问卷，也可以先完成。';
+      document.getElementById('contactView').classList.remove('hidden');
+      document.getElementById('contactEdit').classList.add('hidden');
+      document.getElementById('contactNextActions').classList.remove('hidden');
+      msg.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    document.getElementById('confirmContactBtn').addEventListener('click', () => contactDone('已确认：你的联系方式今年无需修改。'));
+    document.getElementById('saveContactBtn').addEventListener('click', () => contactDone('已保存：本次修改会进入联系方式历史。'));
+
+    document.getElementById('surveyForm').addEventListener('submit', e => {
+      e.preventDefault();
+      state.surveyDone = true;
+      route('done');
+    });
+    document.getElementById('saveDraftBtn').addEventListener('click', () => {
+      const msg = document.getElementById('draftMsg');
+      msg.classList.remove('hidden');
+      msg.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+
+    document.getElementById('recoverBtn').addEventListener('click', () => {
+      const msg = document.getElementById('recoverMsg');
+      msg.textContent = '已提交。管理员会人工核对，不会自动展示你的旧资料。';
+      msg.classList.remove('hidden');
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const pwd = document.getElementById('adminPwd').value.trim();
+      const msg = document.getElementById('loginMsg');
+      if(!pwd){
+        msg.textContent = '请输入管理密码。';
+        msg.classList.remove('hidden');
+        return;
+      }
+      state.admin = true;
+      msg.classList.add('hidden');
+      route('admin');
+    });
+
+    document.querySelectorAll('.drawer-open').forEach(btn => btn.addEventListener('click', () => {
+      document.getElementById('drawerTitle').textContent = btn.dataset.person + ' · 成员详情';
+      document.getElementById('drawer').classList.add('on');
+    }));
+    document.getElementById('drawerClose').addEventListener('click', () => document.getElementById('drawer').classList.remove('on'));
+
+    const startHash = window.location.hash.replace('#','');
+    if(startHash && document.getElementById(startHash)) route(startHash);
+    window.addEventListener('hashchange', () => {
+      const next = window.location.hash.replace('#','');
+      if(next && document.getElementById(next)) route(next);
+    });
+  </script>
+</body>
+</html>

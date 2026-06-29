@@ -1,0 +1,19 @@
+{
+  "name": "csight-alumni-passion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck",
+    "db:migrate:local": "wrangler d1 migrations apply csight-alumni-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply csight-alumni-db --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260621.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.23.0"
+  }
+}

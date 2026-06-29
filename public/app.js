@@ -11,7 +11,8 @@ const state = {
   lastSurveyAffiliation: "",
   surveyContact: null,
   mapChart: null,
-  adminLoaded: false
+  adminLoaded: false,
+  confirmNewMember: false
 };
 
 const CITY_COORDS = {
@@ -334,6 +335,7 @@ function enableContactForm(enabled) {
 
 function renderMember(member) {
   state.member = member || null;
+  if (member) state.confirmNewMember = false;
   if (!member) {
     $("#memberNotice")?.classList.remove("hidden");
     $("#memberSummary")?.classList.add("hidden");
@@ -377,6 +379,29 @@ function clearMemberMatches() {
   if (list) list.innerHTML = "";
 }
 
+function memberMatchPayload(source = {}) {
+  const name = source.real_name || source.realName || source.survey_name || source.name || "";
+  const spiritName = source.spirit_name || source.spiritName || "";
+  return {
+    spirit_name: spiritName,
+    real_name: name || spiritName,
+    phone: source.phone || "",
+    wechat: source.wechat || ""
+  };
+}
+
+function hasMemberMatchInput(source = {}) {
+  const payload = memberMatchPayload(source);
+  return Boolean(payload.spirit_name || payload.real_name || payload.phone || payload.wechat);
+}
+
+async function findMemberMatches(source = {}) {
+  if (!hasMemberMatchInput(source)) return [];
+  const response = await apiRequest("/api/member/matches", { body: memberMatchPayload(source) });
+  const data = normalizeObjectPayload(response, ["data"]);
+  return normalizeListPayload(data, ["matches"]);
+}
+
 function renderMemberMatches(matches) {
   const panel = $("#memberMatches");
   const list = $("#memberMatchesList");
@@ -386,6 +411,7 @@ function renderMemberMatches(matches) {
     return;
   }
   panel.classList.remove("hidden");
+  state.confirmNewMember = false;
   list.innerHTML = matches.map((match, index) => {
     const member = match.member || {};
     const title = member.realName || member.real_name || member.spiritName || member.spirit_name || "未命名伙伴";
@@ -405,14 +431,31 @@ function renderMemberMatches(matches) {
         <button class="btn secondary" type="button" data-match-index="${index}">更新这条</button>
       </div>
     `;
-  }).join("");
+  }).join("") + `
+    <div class="match-item new-member-choice">
+      <div>
+        <b>都不是我</b>
+        <span>确认后，这次保存会新增一条通讯录记录。</span>
+      </div>
+      <button class="btn ghost" type="button" id="confirmNewMemberBtn">新增一条</button>
+    </div>
+  `;
   $$("[data-match-index]", list).forEach((button) => {
     button.addEventListener("click", () => selectMemberMatch(matches[Number(button.dataset.matchIndex)]));
+  });
+  $("#confirmNewMemberBtn")?.addEventListener("click", () => {
+    state.confirmNewMember = true;
+    state.member = null;
+    state.verifyToken = "";
+    sessionStorage.removeItem(VERIFY_TOKEN_KEY);
+    clearMemberMatches();
+    setMessage($("#contactMsg"), "warn", "已选择新增一条通讯录。请再确认表单信息，然后保存。");
   });
 }
 
 function selectMemberMatch(match) {
   if (!match?.member) return;
+  state.confirmNewMember = false;
   const token = match.token || match.verification_token || match.verificationToken;
   if (token) {
     state.verifyToken = token;
@@ -431,6 +474,7 @@ function maskPhone(phone) {
 
 function showVerifiedContactFallback(seed = {}) {
   state.member = null;
+  state.confirmNewMember = false;
   const notice = $("#memberNotice");
   if (notice) {
     notice.textContent = "没有匹配到旧通讯录记录。你可以直接新增一条通讯录；如果只是来填问卷，也可以跳到问卷。";
@@ -440,8 +484,10 @@ function showVerifiedContactFallback(seed = {}) {
   enableContactForm(true);
   fillForm($("#contactForm"), {
     spirit_name: seed.spirit_name || "",
+    real_name: seed.real_name || seed.survey_name || "",
     cohort: seed.cohort || "",
     phone: seed.phone || "",
+    wechat: seed.wechat || "",
     directory_visibility: "internal"
   });
 }
@@ -594,14 +640,30 @@ async function handleVerify(event) {
   const message = $("#verifyMsg");
   const data = formToObject(form);
 
-  if (!data.phone || !data.spirit_name) {
-    setMessage(message, "error", "请至少填写精灵名和手机号。若信息记不清，可以提交人工恢复。");
+  if (!hasMemberMatchInput(data)) {
+    setMessage(message, "error", "请至少填写姓名/精灵名、手机号或微信号中的一项。若信息记不清，可以提交人工恢复。");
     return;
   }
 
-  setBusy(button, true, "核验中...");
+  setBusy(button, true, "查询中...");
   clearMessage(message);
   try {
+    if (!data.phone || !data.spirit_name) {
+      showVerifiedContactFallback(data);
+      route("contact");
+      const matches = await findMemberMatches(data);
+      renderMemberMatches(matches);
+      setMessage(
+        $("#contactMsg"),
+        matches.length ? "warn" : "warn",
+        matches.length
+          ? `系统找到 ${matches.length} 条可能匹配的通讯录记录。请先选择要更新哪一条；如果都不是，再选择新增。`
+          : "没有找到明显匹配的旧通讯录记录。你可以直接新增通讯录，或继续填写开放问卷。"
+      );
+      setMessage(message, "ok", "已进入通讯录确认页。");
+      return;
+    }
+
     const payload = await apiRequest("/api/verify", { body: data });
     const result = normalizeObjectPayload(payload, ["result", "verification"]);
     const token = result.token || result.verification_token || payload.token || payload.verification_token;
@@ -627,8 +689,21 @@ async function handleVerify(event) {
   } catch (error) {
     if (error.status === 404) {
       showVerifiedContactFallback(data);
-      setMessage(message, "warn", "没有匹配到旧通讯录记录。你可以直接新增通讯录，或继续填写开放问卷。");
-      setTimeout(() => route("contact"), 520);
+      route("contact");
+      try {
+        const matches = await findMemberMatches(data);
+        renderMemberMatches(matches);
+        setMessage(
+          $("#contactMsg"),
+          "warn",
+          matches.length
+            ? `没有通过严格核验，但系统找到 ${matches.length} 条可能匹配的通讯录记录。请确认要更新哪一条。`
+            : "没有匹配到旧通讯录记录。你可以直接新增通讯录，或继续填写开放问卷。"
+        );
+      } catch {
+        setMessage($("#contactMsg"), "warn", "没有匹配到旧通讯录记录。你可以直接新增通讯录，或继续填写开放问卷。");
+      }
+      setMessage(message, "warn", "已进入通讯录确认页。");
     } else {
       setMessage(message, "error", `${error.message || "核验失败"}。你可以再检查一次，或提交人工恢复。`);
     }
@@ -649,6 +724,26 @@ async function submitContact(event) {
     ...formToObject(event.currentTarget)
   };
 
+  clearMessage(message);
+
+  if (!isExistingMember && !state.confirmNewMember && hasMemberMatchInput(data)) {
+    setBusy(button, true, "查重中...");
+    try {
+      const matches = await findMemberMatches(data);
+      if (matches.length) {
+        renderMemberMatches(matches);
+        setMessage(message, "warn", `系统找到 ${matches.length} 条可能匹配的通讯录记录。请先选择要更新哪一条；如果都不是，再点击“新增一条”。`);
+        return;
+      }
+      state.confirmNewMember = true;
+    } catch (error) {
+      setMessage(message, "error", `${error.message || "查重失败"}。为了避免重复记录，请稍后再试或联系秘书处。`);
+      return;
+    } finally {
+      setBusy(button, false);
+    }
+  }
+
   setBusy(button, true, isExistingMember ? "保存中..." : "新增中...");
   clearMessage(message);
   try {
@@ -660,6 +755,7 @@ async function submitContact(event) {
     }
     const member = normalizeObjectPayload(payload, ["member"]);
     if (member && Object.keys(member).length) renderMember(member);
+    state.confirmNewMember = false;
     clearMemberMatches();
     setMessage(message, "ok", isExistingMember ? "通讯录更新已保存。可以继续填写年会问卷。" : "新通讯录成员已添加。可以继续填写年会问卷。");
     loadMemberMap();
@@ -713,16 +809,8 @@ function prefillContactFromSurvey(survey) {
 }
 
 async function loadMemberMatchesFromSurvey(survey) {
-  const payload = {
-    spirit_name: survey.spirit_name,
-    real_name: survey.real_name || survey.survey_name,
-    phone: survey.phone,
-    wechat: survey.wechat
-  };
   try {
-    const response = await apiRequest("/api/member/matches", { body: payload });
-    const data = normalizeObjectPayload(response, ["data"]);
-    const matches = normalizeListPayload(data, ["matches"]);
+    const matches = await findMemberMatches(survey);
     renderMemberMatches(matches);
     if (matches.length) {
       setMessage($("#contactMsg"), "warn", `问卷已保存。系统找到 ${matches.length} 条可能匹配的通讯录记录，请选择要更新哪一条；如果都不是，也可以直接新增。`);

@@ -879,6 +879,11 @@ textarea:focus {
   margin-top: 2px;
 }
 
+.match-item.new-member-choice {
+  border-style: dashed;
+  background: rgba(255, 250, 242, .72);
+}
+
 .identity-card h3 {
   font-family: var(--serif);
   font-size: 25px;

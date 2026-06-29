@@ -155,7 +155,7 @@
             <div>
               <div class="kicker">Step 01 · Find your star</div>
               <h2>先找到你在创见通讯录里的位置</h2>
-              <p>期数、精灵名和手机号只用于身份核验。换过手机号或不确定记录时，可以提交人工恢复。</p>
+              <p>输入姓名/精灵名、手机号或微信号中的任意一项，系统会先帮你查找可能的通讯录记录。</p>
             </div>
           </div>
 
@@ -187,12 +187,12 @@
                 </select>
               </div>
               <div class="field">
-                <label for="verifySpiritName">精灵名 / 常用称呼</label>
-                <input id="verifySpiritName" name="spirit_name" placeholder="如：月见" autocomplete="nickname">
+                <label for="verifySpiritName">姓名 / 精灵名 / 常用称呼</label>
+                <input id="verifySpiritName" name="spirit_name" placeholder="如：月见 / 张三" autocomplete="nickname">
               </div>
               <div class="field">
                 <label for="verifyPhone">手机号</label>
-                <input id="verifyPhone" name="phone" class="mono" inputmode="tel" maxlength="18" placeholder="用于核验，不会公开" autocomplete="tel">
+                <input id="verifyPhone" name="phone" class="mono" inputmode="tel" maxlength="18" placeholder="可只填这一项" autocomplete="tel">
               </div>
             </div>
             <div class="actions">
@@ -227,7 +227,7 @@
           <div id="memberMatches" class="match-panel hidden">
             <div class="kicker">Possible matches</div>
             <h3>这些通讯录记录可能是你</h3>
-            <p class="mini-copy">请确认要更新哪一条；如果都不是，也可以继续作为新成员保存。</p>
+            <p class="mini-copy">请确认要更新哪一条；如果都不是，请明确选择新增一条，系统会避免重复保存。</p>
             <div id="memberMatchesList" class="match-list"></div>
           </div>
 

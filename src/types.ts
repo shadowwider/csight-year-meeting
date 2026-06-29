@@ -1,7 +1,7 @@
 export interface Env {
   DB: D1Database;
   ASSETS?: Fetcher;
-  ADMIN_TOKEN?: string;
+  ADMIN_PASSWORD?: string;
   CAMPAIGN_SLUG?: string;
 }
 

@@ -7,7 +7,7 @@
 - 校友入口：查看年会说明，确认通讯录信息，填写年度问卷。
 - 成员核验：基于通讯录成员信息识别校友，支持资料更新和找回请求。
 - 年度问卷：收集活动反馈、未来活动需求、创见集市意向和通讯录授权。
-- 管理后台：使用 `ADMIN_TOKEN` 进入后台，管理成员名单、问卷结果、通讯录和导出。
+- 管理后台：使用 `ADMIN_PASSWORD` 进入后台，管理成员名单、问卷结果、通讯录和导出。
 - CSV 导入：成员导入只支持标准 CSV 模板，不兼容旧 Excel 文件。模板见 [docs/import-template.md](docs/import-template.md)。
 
 ## 本地开发
@@ -15,7 +15,7 @@
 ```powershell
 npm install
 Copy-Item .dev.vars.example .dev.vars
-# 编辑 .dev.vars，把 ADMIN_TOKEN 改成仅本地使用的随机值
+# 编辑 .dev.vars，把 ADMIN_PASSWORD 改成仅本地使用的长密码
 npm run db:migrate:local
 npm run dev
 ```
@@ -30,6 +30,8 @@ npm run dev
 更完整的本地验证流程见 [scripts/README.md](scripts/README.md)。
 
 ## Cloudflare D1 创建与迁移
+
+如果你准备走 Cloudflare Dashboard + Workers Builds 的 GitHub 自动部署路径，本地机器不需要先 `wrangler login` 才能部署代码。下面的 CLI 命令主要用于创建远端 D1、应用迁移或手动部署；也可以在 Cloudflare Dashboard 中完成等价配置。
 
 1. 登录 Cloudflare：
 
@@ -63,46 +65,47 @@ npm run dev
 
 参考：Cloudflare [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/) 和 [D1 Wrangler commands](https://developers.cloudflare.com/d1/wrangler-commands/)。
 
-## ADMIN_TOKEN Secret
+## ADMIN_PASSWORD Secret
 
-`ADMIN_TOKEN` 是管理后台口令，不要写入 `wrangler.jsonc`，也不要提交真实值。
+`ADMIN_PASSWORD` 是管理后台密码，不要写入 `wrangler.jsonc`，也不要提交真实值。
 
 本地开发：
 
 ```powershell
 Copy-Item .dev.vars.example .dev.vars
-# 编辑 .dev.vars 中的 ADMIN_TOKEN
+# 编辑 .dev.vars 中的 ADMIN_PASSWORD
 ```
 
 生产环境：
 
 ```powershell
-npx wrangler secret put ADMIN_TOKEN
+npx wrangler secret put ADMIN_PASSWORD
 ```
 
-输入一个足够长、随机、只给管理员使用的值。之后在 Cloudflare Dashboard 的 Worker 设置中确认 secret 已配置。参考 Cloudflare [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/) 和 [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/)。
+输入一个足够长、随机、只给管理员使用的密码。也可以在 Cloudflare Dashboard 的 Worker 设置中进入 Variables and Secrets，添加类型为 Secret 的 `ADMIN_PASSWORD`。参考 Cloudflare [Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/) 和 [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/)。
 
 ## Workers Builds GitHub 连接
 
-可以通过 Cloudflare Workers Builds 连接 GitHub 仓库，让 main 分支 push 后自动构建和部署。
+可以通过 Cloudflare Workers Builds 连接 GitHub 仓库，让 main 分支 push 后自动构建和部署。走这条路径时，不需要在本机登录 Cloudflare；Cloudflare 会在 dashboard 授权后使用 Workers Builds 的部署权限。
 
 1. 将代码推送到 GitHub 仓库。
 2. 打开 Cloudflare Dashboard，进入 Workers & Pages。
 3. 创建或选择 Worker，使用 Git integration / Workers Builds 连接 GitHub 仓库。
 4. 选择生产分支，例如 `main`。
-5. 构建命令建议使用：
+5. 构建命令可留空；若希望部署前跑一次类型检查，可使用：
 
    ```text
    npm install && npm run check
    ```
 
-6. 部署命令使用 Wrangler 默认部署流程，或在 Build 配置中确保执行：
+6. 部署命令可使用 Workers Builds 默认的 `npx wrangler deploy`，或填写项目脚本：
 
    ```text
    npm run deploy
    ```
 
-7. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_TOKEN` secret 已配置、远端迁移已执行。
+7. 确认 Cloudflare Worker 名称和 [wrangler.jsonc](wrangler.jsonc) 中的 `name` 一致。
+8. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_PASSWORD` secret 已配置、远端迁移已执行。
 
 参考：Cloudflare [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) 和 [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/)。
 

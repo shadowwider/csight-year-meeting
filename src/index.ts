@@ -44,7 +44,7 @@ const EVENT_CONFIG = {
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, X-Admin-Password, X-Verification-Token",
 };
 
 export default {
@@ -126,7 +126,15 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
 
 async function handleVerify(request: Request, env: Env): Promise<Response> {
   const body = await readJsonObject(request);
-  const name = normalizeText(getAliasedValue([body], ["name", "精灵名", "姓名", "spiritName", "realName"]));
+  const name = normalizeText(getAliasedValue([body], [
+    "name",
+    "精灵名",
+    "姓名",
+    "spiritName",
+    "spirit_name",
+    "realName",
+    "real_name",
+  ]));
   const phone = normalizePhone(getAliasedValue([body], ["phone", "手机号"]));
   const cohort = textOrNull(getAliasedValue([body], ["cohort", "期数", "所在期数"]));
 
@@ -157,7 +165,7 @@ async function handleVerify(request: Request, env: Env): Promise<Response> {
 async function handleGetMember(url: URL, env: Env, slug: string): Promise<Response> {
   const token = normalizeText(url.searchParams.get("token"));
   if (!token) {
-    throw new RequestError(400, "missing_token", "缺少核验 token。");
+    throw new RequestError(400, "missing_verification", "缺少身份核验凭证。");
   }
 
   const member = await requireVerifiedMember(env, token);
@@ -499,12 +507,11 @@ async function requireVerifiedMember(env: Env, token: string): Promise<Member> {
 }
 
 function requireAdmin(request: Request, env: Env): void {
-  if (!env.ADMIN_TOKEN) {
-    throw new RequestError(500, "admin_token_missing", "管理员密钥尚未配置。");
+  if (!env.ADMIN_PASSWORD) {
+    throw new RequestError(500, "admin_password_missing", "管理员密码尚未配置。");
   }
-  const expected = `Bearer ${env.ADMIN_TOKEN}`;
-  if (request.headers.get("Authorization") !== expected) {
-    throw new RequestError(401, "unauthorized", "需要管理员授权。");
+  if (request.headers.get("X-Admin-Password") !== env.ADMIN_PASSWORD) {
+    throw new RequestError(401, "unauthorized", "管理密码不正确。");
   }
 }
 

@@ -1,4 +1,4 @@
-const ADMIN_TOKEN_KEY = "csight.adminToken";
+const ADMIN_PASSWORD_KEY = "csight.adminPassword";
 const VERIFY_TOKEN_KEY = "csight.verifyToken";
 const DRAFT_KEY = "csight.passionSurveyDraft";
 const CAMPAIGN_SLUG = "csight-passion-2026";
@@ -7,7 +7,7 @@ const state = {
   config: null,
   member: null,
   verifyToken: sessionStorage.getItem(VERIFY_TOKEN_KEY) || "",
-  adminToken: sessionStorage.getItem(ADMIN_TOKEN_KEY) || "",
+  adminPassword: sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "",
   adminLoaded: false
 };
 
@@ -116,6 +116,102 @@ function fillForm(form, data) {
   });
 }
 
+function hasFormValue(form, name) {
+  const fields = $$(`[name="${name}"]`, form);
+  if (!fields.length) return false;
+  if (fields[0].type === "checkbox" || fields[0].type === "radio") {
+    return fields.some((field) => field.checked);
+  }
+  return Boolean(String(fields[0].value || "").trim());
+}
+
+function setFormValueIfEmpty(form, name, value, options = {}) {
+  if (!form || value == null || value === "") return false;
+  const fields = $$(`[name="${name}"]`, form);
+  if (!fields.length) return false;
+  if (!options.overwrite && hasFormValue(form, name)) return false;
+
+  if (fields[0].type === "checkbox") {
+    const values = asArray(value);
+    let matched = false;
+    fields.forEach((field) => {
+      field.checked = values.includes(field.value);
+      matched = matched || field.checked;
+    });
+    return matched;
+  }
+
+  if (fields[0].type === "radio") {
+    let matched = false;
+    fields.forEach((field) => {
+      field.checked = String(value) === field.value;
+      matched = matched || field.checked;
+    });
+    return matched;
+  }
+
+  fields[0].value = Array.isArray(value) ? value.join("、") : value;
+  return true;
+}
+
+function surveyFormDataFromMember(member) {
+  return {
+    current_status: member.current_status || member.currentStatus || "",
+    focus_fields: member.focus_fields || member.focusFields || "",
+    self_intro: member.self_intro || member.selfIntro || "",
+    directory_visibility: member.directory_visibility || member.directoryVisibility || ""
+  };
+}
+
+function surveyFormDataFromResponse(response) {
+  return {
+    will_attend: response.will_attend || response.willAttend || "",
+    current_status: response.current_status || response.currentStatus || "",
+    focus_fields: response.focus_fields || response.focusFields || "",
+    self_intro: response.self_intro || response.selfIntro || "",
+    activities_joined: response.activities_joined || response.activitiesJoined || "",
+    activity_other: response.activity_other || response.activityOther || "",
+    memorable_activity: response.memorable_activity || response.memorableActivity || "",
+    activity_value: response.activity_value || response.activityValue || "",
+    activity_improvements: response.activity_improvements || response.activityImprovements || "",
+    future_activities: response.future_activities || response.futureActivities || "",
+    future_topics: response.future_topics || response.futureTopics || "",
+    co_creation_roles: response.co_creation_roles || response.coCreationRoles || "",
+    market_interest: response.market_interest || response.marketInterest || "",
+    market_description: response.market_description || response.marketDescription || "",
+    market_types: response.market_types || response.marketTypes || "",
+    followup_consent: response.followup_consent || response.followupConsent || "",
+    directory_visibility: response.directory_visibility || response.directoryVisibility || "",
+    message_to_csight: response.message_to_csight || response.messageToCsight || ""
+  };
+}
+
+function prefillSurvey(data, message, options = {}) {
+  const form = $("#surveyForm");
+  if (!form || !data) return;
+  const changed = Object.entries(data)
+    .filter(([, value]) => value != null && value !== "")
+    .map(([name, value]) => setFormValueIfEmpty(form, name, value, options))
+    .filter(Boolean).length;
+  if (changed) {
+    setMessage($("#surveyPrefillMsg"), "ok", message);
+  }
+}
+
+function prefillSurveyFromMember(member) {
+  prefillSurvey(
+    surveyFormDataFromMember(member),
+    "已从通讯录带入近况、关注领域和通讯录授权。你可以直接提交，也可以修改；问卷提交后会同步更新通讯录中的这些字段。"
+  );
+}
+
+function prefillSurveyFromResponse(response) {
+  prefillSurvey(
+    surveyFormDataFromResponse(response),
+    "已载入你之前提交过的问卷内容。修改后再次提交，会更新本次年会问卷。"
+  );
+}
+
 function getTokenPayload() {
   return state.verifyToken ? { verification_token: state.verifyToken, token: state.verifyToken } : {};
 }
@@ -146,8 +242,8 @@ async function apiRequest(path, options = {}) {
   }
 
   if (options.admin) {
-    const token = state.adminToken || sessionStorage.getItem(ADMIN_TOKEN_KEY);
-    if (token) headers.set("Authorization", `Bearer ${token}`);
+    const password = state.adminPassword || sessionStorage.getItem(ADMIN_PASSWORD_KEY);
+    if (password) headers.set("X-Admin-Password", password);
   }
 
   const response = await fetch(path, {
@@ -174,7 +270,7 @@ async function apiRequest(path, options = {}) {
 }
 
 function route(name, options = {}) {
-  if (name === "admin" && !state.adminToken) {
+  if (name === "admin" && !state.adminPassword) {
     route("admin-login");
     return;
   }
@@ -244,6 +340,7 @@ function renderMember(member) {
     self_intro: member.self_intro || member.selfIntro || "",
     directory_visibility: member.directory_visibility || member.directoryVisibility || "internal"
   });
+  prefillSurveyFromMember(member);
 }
 
 function showVerifiedContactFallback(seed = {}) {
@@ -298,7 +395,10 @@ async function loadMemberFromToken() {
     const payload = await apiRequest(`/api/member?token=${encodeURIComponent(state.verifyToken)}`, {
       headers: { "X-Verification-Token": state.verifyToken }
     });
-    renderMember(normalizeObjectPayload(payload, ["member"]));
+    const data = normalizeObjectPayload(payload, ["data"]);
+    const member = data.member || normalizeObjectPayload(payload, ["member"]);
+    renderMember(member);
+    if (data.response) prefillSurveyFromResponse(data.response);
   } catch {
     if (state.verifyToken) showVerifiedContactFallback();
     else renderMember(null);
@@ -430,7 +530,9 @@ async function submitSurvey(event) {
   setBusy(button, true, "提交中...");
   clearMessage(message);
   try {
-    await apiRequest("/api/survey", { body: payload });
+    const responsePayload = await apiRequest("/api/survey", { body: payload });
+    const member = normalizeObjectPayload(responsePayload, ["member"]);
+    if (member && Object.keys(member).length) renderMember(member);
     localStorage.removeItem(DRAFT_KEY);
     route("done");
   } catch (error) {
@@ -462,25 +564,26 @@ async function submitRecovery(event) {
   }
 }
 
-function saveAdminToken() {
-  const input = $("#adminToken");
-  const token = input.value.trim();
-  if (!token) {
-    setMessage($("#adminLoginMsg"), "error", "请输入管理 token。");
+function saveAdminPassword() {
+  const input = $("#adminPassword");
+  const password = input.value.trim();
+  if (!password) {
+    setMessage($("#adminLoginMsg"), "error", "请输入管理密码。");
     return;
   }
-  state.adminToken = token;
-  sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
-  setMessage($("#adminLoginMsg"), "ok", "Token 已保存到当前会话。");
+  state.adminPassword = password;
+  sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
+  setMessage($("#adminLoginMsg"), "ok", "管理密码已保存到当前会话。");
   route("admin");
 }
 
-function clearAdminToken() {
-  state.adminToken = "";
+function clearAdminPassword() {
+  state.adminPassword = "";
   state.adminLoaded = false;
-  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-  $("#adminToken").value = "";
-  setMessage($("#adminLoginMsg"), "ok", "Token 已清除。");
+  sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
+  const input = $("#adminPassword");
+  if (input) input.value = "";
+  setMessage($("#adminLoginMsg"), "ok", "管理密码已清除。");
   route("admin-login");
 }
 
@@ -571,7 +674,7 @@ function renderTable(selector, rows, colspan, rowRenderer) {
 }
 
 async function loadAdminData() {
-  if (!state.adminToken) {
+  if (!state.adminPassword) {
     route("admin-login");
     return;
   }
@@ -699,9 +802,9 @@ function bindEvents() {
   $("#saveDraftBtn")?.addEventListener("click", saveDraft);
   $("#recoverForm")?.addEventListener("submit", submitRecovery);
 
-  $("#adminTokenSave")?.addEventListener("click", saveAdminToken);
-  $("#adminTokenClear")?.addEventListener("click", clearAdminToken);
-  $("#adminLogout")?.addEventListener("click", clearAdminToken);
+  $("#adminPasswordSave")?.addEventListener("click", saveAdminPassword);
+  $("#adminPasswordClear")?.addEventListener("click", clearAdminPassword);
+  $("#adminLogout")?.addEventListener("click", clearAdminPassword);
   $("#adminRefresh")?.addEventListener("click", loadAdminData);
   $("#csvImport")?.addEventListener("click", importCsv);
   $("#csvExport")?.addEventListener("click", exportCsv);
@@ -712,16 +815,16 @@ function bindEvents() {
 function boot() {
   bindEvents();
   enableContactForm(hasVerifiedIdentity());
-  if (state.adminToken) $("#adminToken").value = state.adminToken;
+  if (state.adminPassword) $("#adminPassword").value = state.adminPassword;
   restoreDraft();
   loadConfig();
   loadMemberFromToken();
 
   const startHash = window.location.hash.replace("#", "");
-  if (startHash && document.getElementById(startHash)) route(startHash, { silent: true });
+  route(startHash && document.getElementById(startHash) ? startHash : "home", { silent: true });
   window.addEventListener("hashchange", () => {
     const next = window.location.hash.replace("#", "");
-    if (next && document.getElementById(next)) route(next, { silent: true });
+    route(next && document.getElementById(next) ? next : "home", { silent: true });
   });
 }
 

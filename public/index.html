@@ -103,6 +103,19 @@
                 <div class="map-note">你的城市、近况、热爱和可连接方向，会帮助老朋友重新找到你。</div>
               </div>
 
+              <div class="card pulse-card">
+                <div class="kicker">Still alive</div>
+                <h3>这一年，创见还在更新</h3>
+                <div class="pulse-list">
+                  <div><b>1st JOB</b><span>第12期伙伴加入探索</span></div>
+                  <div><b>即行工作坊</b><span>每月线下相遇</span></div>
+                  <div><b>石头村</b><span>共同生活与实践持续生长</span></div>
+                  <div><b>百宝开箱</b><span>每月更新真实故事</span></div>
+                  <div><b>编辑部</b><span>首本书将在年会见面</span></div>
+                  <div><b>创见101</b><span>季度轻社交重新启动</span></div>
+                </div>
+              </div>
+
               <div class="card flat">
                 <div class="kicker">Current rhythm</div>
                 <div class="data-grid compact">
@@ -301,6 +314,8 @@
             <div class="step on"><b>03</b>年会问卷</div>
             <div class="step"><b>04</b>完成</div>
           </div>
+
+          <div id="surveyPrefillMsg" class="message ok hidden" aria-live="polite"></div>
 
           <form id="surveyForm" class="card">
             <div class="question first">
@@ -597,14 +612,14 @@
           <div class="card login-card">
             <div class="kicker">Admin</div>
             <h2>进入创见后台</h2>
-            <p class="mini-copy">请输入后端提供的管理 token。token 会保存在当前标签页的 sessionStorage，关闭标签页后失效。</p>
+            <p class="mini-copy">请输入后端配置的管理密码。密码只保存在当前标签页的 sessionStorage，关闭标签页后失效。</p>
             <div class="field stack-space">
-              <label for="adminToken">管理 token</label>
-              <input id="adminToken" type="password" autocomplete="off" placeholder="Bearer token">
+              <label for="adminPassword">管理密码</label>
+              <input id="adminPassword" type="password" autocomplete="off" placeholder="输入后台密码">
             </div>
             <div class="actions">
-              <button id="adminTokenSave" class="btn indigo" type="button">保存并进入后台</button>
-              <button id="adminTokenClear" class="btn ghost" type="button">清除 token</button>
+              <button id="adminPasswordSave" class="btn indigo" type="button">保存密码并进入后台</button>
+              <button id="adminPasswordClear" class="btn ghost" type="button">清除密码</button>
               <button class="btn secondary" type="button" data-route="home">返回公开页</button>
             </div>
             <div id="adminLoginMsg" class="message hidden" aria-live="polite"></div>
@@ -627,8 +642,8 @@
                 <button type="button" data-admin-panel="recovery">恢复</button>
                 <button type="button" data-admin-panel="csv">CSV</button>
               </nav>
-              <div class="admin-token-note">
-                <span>Token 已保存在当前会话</span>
+              <div class="admin-session-note">
+                <span>管理密码已保存在当前会话</span>
                 <button id="adminLogout" class="plain-link" type="button">退出</button>
               </div>
             </aside>

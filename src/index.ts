@@ -706,9 +706,9 @@ function exportResponsesCsv(items: SurveyResponseWithMember[]): string {
     { key: "updatedAt", label: "更新时间" },
   ];
   const rows = items.map(({ member, response }) => ({
-    spiritName: member?.spiritName ?? payloadText(response.payload, "spirit_name", "name", "real_name"),
+    spiritName: member?.spiritName ?? payloadText(response.payload, "spirit_name", "survey_name", "name", "real_name"),
     cohort: member?.cohort ?? payloadText(response.payload, "cohort"),
-    realName: member?.realName ?? payloadText(response.payload, "real_name", "name"),
+    realName: member?.realName ?? payloadText(response.payload, "real_name", "survey_name", "name"),
     phone: member?.phone ?? payloadText(response.payload, "phone"),
     city: member?.city ?? payloadText(response.payload, "city"),
     willAttend: response.willAttend,

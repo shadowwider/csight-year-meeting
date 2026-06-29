@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#fbf8f0">
   <title>创见 2026 Passion 年会 · 校友通讯录更新</title>
   <link rel="stylesheet" href="./styles.css">
+  <script src="./echarts.min.js"></script>
 </head>
 <body>
   <div class="app">
@@ -104,7 +105,7 @@
                   <div class="map-title">创见的坐标，正在全国亮起。</div>
                   <div id="mapSummary" class="map-note">正在读取通讯录城市分布。</div>
                 </div>
-                <div id="mapPoints" class="map-points" aria-hidden="true"></div>
+                <div id="mapChart" class="map-chart" aria-label="创见校友中国城市分布图"></div>
                 <div id="mapTopCities" class="map-city-list"></div>
               </div>
 
@@ -296,6 +297,7 @@
             <div class="actions">
               <button id="contactSubmit" class="btn" type="submit">保存通讯录更新</button>
               <button class="btn ghost" type="button" data-route="survey">跳到年会问卷</button>
+              <button id="contactSkipDoneBtn" class="btn secondary" type="button" data-route="done">暂不更新，完成问卷</button>
             </div>
             <div id="contactMsg" class="message hidden" aria-live="polite"></div>
           </form>
@@ -330,6 +332,30 @@
               <div class="options">
                 <label class="option"><input type="radio" name="csight_affiliation" value="yes" required> 是，我是创见校友 / 组织伙伴</label>
                 <label class="option"><input type="radio" name="csight_affiliation" value="no"> 不是，但我想参与或提供反馈</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">填写人 · 基本联系</div>
+              <h3>方便留下你是谁吗？</h3>
+              <p class="mini-copy">这部分用于秘书处理解问卷来源；如果你后续更新通讯录，会自动带过去。</p>
+              <div class="form-grid two">
+                <div class="field">
+                  <label for="surveyName">姓名 / 称呼</label>
+                  <input id="surveyName" name="survey_name" autocomplete="name" placeholder="如：张三 / 月见">
+                </div>
+                <div class="field">
+                  <label for="surveySpiritName">精灵名</label>
+                  <input id="surveySpiritName" name="spirit_name" autocomplete="nickname" placeholder="校友可填">
+                </div>
+                <div class="field">
+                  <label for="surveyPhone">手机号</label>
+                  <input id="surveyPhone" name="phone" class="mono" inputmode="tel" autocomplete="tel" placeholder="可选，用于后续联系">
+                </div>
+                <div class="field">
+                  <label for="surveyWechat">微信号</label>
+                  <input id="surveyWechat" name="wechat" class="mono" autocomplete="off" placeholder="可选">
+                </div>
               </div>
             </div>
 

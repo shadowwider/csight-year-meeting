@@ -3,53 +3,14 @@ const VERIFY_TOKEN_KEY = "csight.verifyToken";
 const DRAFT_KEY = "csight.passionSurveyDraft";
 const CAMPAIGN_SLUG = "csight-passion-2026";
 
-const CITY_POSITIONS = {
-  "北京市": [73, 30],
-  "北京": [73, 30],
-  "上海市": [82, 61],
-  "上海": [82, 61],
-  "天津市": [76, 34],
-  "天津": [76, 34],
-  "重庆市": [57, 62],
-  "重庆": [57, 62],
-  "广州市": [68, 78],
-  "广州": [68, 78],
-  "深圳市": [70, 82],
-  "深圳": [70, 82],
-  "杭州市": [78, 63],
-  "杭州": [78, 63],
-  "南京市": [76, 57],
-  "南京": [76, 57],
-  "苏州市": [80, 59],
-  "苏州": [80, 59],
-  "武汉市": [65, 58],
-  "武汉": [65, 58],
-  "成都市": [52, 62],
-  "成都": [52, 62],
-  "西安市": [57, 47],
-  "西安": [57, 47],
-  "长沙市": [65, 66],
-  "长沙": [65, 66],
-  "厦门市": [75, 76],
-  "厦门": [75, 76],
-  "青岛市": [78, 43],
-  "青岛": [78, 43],
-  "郑州市": [64, 48],
-  "郑州": [64, 48],
-  "温州市": [80, 70],
-  "温州": [80, 70],
-  "台州市": [81, 67],
-  "台州": [81, 67],
-  "宁波市": [82, 65],
-  "宁波": [82, 65]
-};
-
 const state = {
   config: null,
   member: null,
   verifyToken: sessionStorage.getItem(VERIFY_TOKEN_KEY) || "",
   adminPassword: sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "",
   lastSurveyAffiliation: "",
+  surveyContact: null,
+  mapChart: null,
   adminLoaded: false
 };
 
@@ -305,7 +266,7 @@ async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const message = data?.message || data?.error || `接口暂时不可用（HTTP ${response.status}）`;
+    const message = data?.message || data?.error?.message || data?.error || `接口暂时不可用（HTTP ${response.status}）`;
     throw new ApiError(message, response.status, data);
   }
   return data;
@@ -428,40 +389,75 @@ async function loadConfig() {
   }
 }
 
-function cityPosition(city) {
-  const clean = String(city || "").trim();
-  if (CITY_POSITIONS[clean]) return CITY_POSITIONS[clean];
-  return CITY_POSITIONS[clean.replace(/市$/, "")] || null;
-}
-
 async function loadMemberMap() {
   try {
     const payload = await apiRequest("/api/member-map");
     const data = normalizeObjectPayload(payload, ["data"]);
     const cities = normalizeListPayload(data, ["cities"]);
-    const maxCount = Math.max(1, Number(data.maxCount || 1));
-    const points = $("#mapPoints");
     const summary = $("#mapSummary");
     const list = $("#mapTopCities");
-    if (!points || !summary || !list) return;
-
-    const positioned = cities
-      .map((item) => ({ ...item, position: cityPosition(item.city) }))
-      .filter((item) => item.position)
-      .slice(0, 24);
-
-    points.innerHTML = positioned.map((item) => {
-      const [x, y] = item.position;
-      const size = 7 + Math.round((Number(item.count) / maxCount) * 14);
-      return `<span class="city-dot" style="--x:${x}%;--y:${y}%;--dot-size:${size}px" title="${escapeHtml(item.city)} · ${escapeHtml(String(item.count))}"></span>`;
-    }).join("");
+    const chartNode = $("#mapChart");
+    if (!summary || !list || !chartNode) return;
 
     summary.textContent = `${data.totalMembers || 0} 位伙伴，已经点亮 ${data.litCities || cities.length} 座城市。`;
     list.innerHTML = cities.slice(0, 5).map((item) => `<span>${escapeHtml(item.city)} ${escapeHtml(String(item.count))}</span>`).join("");
+    await renderChinaMap(chartNode, cities);
   } catch {
     const summary = $("#mapSummary");
     if (summary) summary.textContent = "城市分布暂时无法同步。";
   }
+}
+
+async function renderChinaMap(node, cities) {
+  if (!window.echarts) {
+    node.textContent = "地图组件加载中";
+    return;
+  }
+  if (!window.echarts.getMap("china")) {
+    const geoJson = await apiRequest("/china.json");
+    window.echarts.registerMap("china", geoJson);
+  }
+  const provinceValues = new Map();
+  for (const item of cities) {
+    const province = normalizeProvinceName(item.province || item.city);
+    provinceValues.set(province, (provinceValues.get(province) || 0) + Number(item.count || 0));
+  }
+  const values = [...provinceValues.values()];
+  const max = Math.max(1, ...values);
+  const seriesData = [...provinceValues.entries()].map(([name, value]) => ({ name, value }));
+  state.mapChart = state.mapChart || window.echarts.init(node, null, { renderer: "svg" });
+  state.mapChart.setOption({
+    tooltip: { trigger: "item", formatter: (params) => `${params.name}<br>${params.value || 0} 位伙伴` },
+    visualMap: {
+      min: 0,
+      max,
+      show: false,
+      inRange: { color: ["#f8f3ea", "#d8e6d7", "#8fb98d", "#b7663c"] }
+    },
+    series: [{
+      type: "map",
+      map: "china",
+      roam: false,
+      selectedMode: false,
+      label: { show: false },
+      emphasis: { label: { show: false }, itemStyle: { areaColor: "#c79a43" } },
+      itemStyle: { borderColor: "#d9d0c2", borderWidth: 0.8, areaColor: "#f8f3ea" },
+      data: seriesData
+    }]
+  });
+  window.addEventListener("resize", () => state.mapChart?.resize(), { once: true });
+}
+
+function normalizeProvinceName(value) {
+  const text = String(value || "").trim();
+  if (!text) return "未知";
+  return text
+    .replace(/省$|市$|回族自治区$|壮族自治区$|维吾尔自治区$|自治区$|特别行政区$/g, "")
+    .replace(/^内蒙古.*/, "内蒙古")
+    .replace(/^广西.*/, "广西")
+    .replace(/^宁夏.*/, "宁夏")
+    .replace(/^新疆.*/, "新疆")
+    .replace(/^西藏.*/, "西藏");
 }
 
 async function loadMemberFromToken() {
@@ -594,12 +590,26 @@ function saveDraft() {
   setMessage($("#surveyMsg"), "ok", "草稿已保存在这个浏览器里。它不会替代正式提交。");
 }
 
+function prefillContactFromSurvey(survey) {
+  fillForm($("#contactForm"), {
+    spirit_name: survey.spirit_name || "",
+    real_name: survey.real_name || survey.survey_name || "",
+    phone: survey.phone || "",
+    wechat: survey.wechat || "",
+    current_status: survey.current_status || "",
+    focus_fields: displayValue(survey.focus_fields, ""),
+    self_intro: survey.self_intro || "",
+    directory_visibility: survey.directory_visibility || "internal"
+  });
+}
+
 async function submitSurvey(event) {
   event.preventDefault();
   const button = $("#surveySubmit");
   const message = $("#surveyMsg");
   const survey = formToObject(event.currentTarget);
   state.lastSurveyAffiliation = survey.csight_affiliation || "";
+  state.surveyContact = survey;
   const payload = {
     ...(hasVerifiedIdentity() ? getTokenPayload() : {}),
     campaign_slug: CAMPAIGN_SLUG,
@@ -615,8 +625,17 @@ async function submitSurvey(event) {
     const member = normalizeObjectPayload(responsePayload, ["member"]);
     if (member && Object.keys(member).length) renderMember(member);
     localStorage.removeItem(DRAFT_KEY);
-    $("#doneContactBtn")?.classList.toggle("hidden", survey.csight_affiliation !== "yes");
-    route("done");
+    if (survey.csight_affiliation === "yes") {
+      if (!member?.id && !state.member?.id) {
+        renderMember(null);
+        prefillContactFromSurvey(survey);
+      }
+      setMessage($("#contactMsg"), "warn", "问卷已保存。请确认或补充通讯录；也可以选择暂不更新，直接完成。");
+      route("contact");
+    } else {
+      $("#doneContactBtn")?.classList.add("hidden");
+      route("done");
+    }
   } catch (error) {
     setMessage(message, "error", `${error.message || "提交失败"}。问卷尚未保存到后端，请稍后再试。`);
   } finally {
@@ -724,15 +743,33 @@ function renderResponses(payload) {
   $("#adminResponsesSummary").textContent = rows.length ? `${rows.length} 条问卷回应` : "接口未返回问卷回应";
   renderTable("#responsesBody", rows, 7, (row) => `
     <tr>
-      <td>${escapeHtml(displayValue(row.member_name || row.memberName || row.spirit_name || row.spiritName, ""))}</td>
-      <td>${escapeHtml(displayValue(row.will_attend || row.willAttend, ""))}</td>
-      <td>${escapeHtml(displayValue(row.current_status || row.currentStatus, ""))}</td>
-      <td>${escapeHtml(displayValue(row.future_activities || row.futureActivities, ""))}</td>
-      <td>${escapeHtml(displayValue(row.market_interest || row.marketInterest, ""))}</td>
-      <td>${escapeHtml(displayValue(row.message_to_csight || row.messageToCsight, ""))}</td>
-      <td class="mono">${escapeHtml(displayValue(row.created_at || row.createdAt, ""))}</td>
+      <td>${escapeHtml(displayValue(responseName(row), ""))}</td>
+      <td>${escapeHtml(displayValue(responseValue(row, "will_attend", "willAttend"), ""))}</td>
+      <td>${escapeHtml(displayValue(responseValue(row, "current_status", "currentStatus"), ""))}</td>
+      <td>${escapeHtml(displayValue(responseValue(row, "future_activities", "futureActivities"), ""))}</td>
+      <td>${escapeHtml(displayValue(responseValue(row, "market_interest", "marketInterest"), ""))}</td>
+      <td>${escapeHtml(displayValue(responseValue(row, "message_to_csight", "messageToCsight"), ""))}</td>
+      <td class="mono">${escapeHtml(displayValue(responseValue(row, "created_at", "createdAt"), ""))}</td>
     </tr>
   `);
+}
+
+function responseValue(row, snakeKey, camelKey) {
+  return row.response?.[camelKey] ?? row.response?.[snakeKey] ?? row[snakeKey] ?? row[camelKey];
+}
+
+function responseName(row) {
+  const payload = row.response?.payload || row.payload || {};
+  return row.member?.spiritName
+    || row.member?.realName
+    || row.member_name
+    || row.memberName
+    || row.spirit_name
+    || row.spiritName
+    || payload.survey_name
+    || payload.spirit_name
+    || payload.real_name
+    || payload.name;
 }
 
 function renderRecovery(payload) {

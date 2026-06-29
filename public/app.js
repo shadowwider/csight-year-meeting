@@ -442,69 +442,33 @@ async function renderChinaMap(node, cities) {
     const geoJson = await apiRequest("/china.json");
     window.echarts.registerMap("china", geoJson);
   }
-  const provinceValues = new Map();
-  for (const item of cities) {
-    const province = normalizeProvinceName(item.province || item.city);
-    provinceValues.set(province, (provinceValues.get(province) || 0) + Number(item.count || 0));
-  }
-  const values = [...provinceValues.values()];
-  const max = Math.max(1, ...values);
-  const seriesData = [...provinceValues.entries()].map(([name, value]) => ({ name, value }));
-  const cityPoints = cities
-    .map((item) => {
-      const coord = cityCoord(item.city);
-      return coord ? { name: item.city, value: [...coord, Number(item.count || 0)] } : null;
-    })
-    .filter(Boolean);
+  const cityPoints = buildCityLightPoints(cities);
   state.mapChart = state.mapChart || window.echarts.init(node, null, { renderer: "svg" });
   state.mapChart.setOption({
     backgroundColor: "transparent",
-    tooltip: { trigger: "item", formatter: (params) => `${params.name}<br>${params.value || 0} 位伙伴` },
-    visualMap: {
-      min: 0,
-      max,
-      show: true,
-      left: 8,
-      bottom: 8,
-      itemWidth: 8,
-      itemHeight: 54,
-      text: ["亮", "未亮"],
-      textStyle: { color: "#736c62", fontSize: 10 },
-      calculable: false,
-      inRange: { color: ["#efe8dd", "#dfeedd", "#a8cf8a", "#e6c96a", "#b7663c"] },
-      outOfRange: { color: ["#eee8df"] }
-    },
+    tooltip: { show: false },
     geo: {
       map: "china",
       roam: true,
       zoom: 1.22,
       scaleLimit: { min: 1, max: 4 },
       itemStyle: { borderColor: "#d1c7b8", borderWidth: 0.8, areaColor: "#eee8df" },
-      emphasis: { label: { show: false }, itemStyle: { areaColor: "#f2c35d" } }
+      emphasis: { disabled: true, label: { show: false } }
     },
     series: [
       {
         type: "map",
         map: "china",
         geoIndex: 0,
-        data: seriesData
+        data: []
       },
       {
-        type: "effectScatter",
+        type: "scatter",
         coordinateSystem: "geo",
         zlevel: 3,
-        rippleEffect: { brushType: "stroke", scale: 4.2 },
-        symbolSize: (value) => 7 + Math.min(24, Math.sqrt(value[2]) * 3.2),
-        itemStyle: { color: "#b7663c", shadowBlur: 16, shadowColor: "rgba(183, 102, 60, .68)" },
-        label: {
-          show: true,
-          formatter: (params) => params.data.value[2] >= 2 ? params.name.replace(/市$/, "") : "",
-          position: "right",
-          color: "#5f574d",
-          fontSize: 10,
-          backgroundColor: "rgba(255,253,248,.78)",
-          padding: [1, 4]
-        },
+        symbolSize: (value) => value[2],
+        itemStyle: { color: "#ffb23f", opacity: 0.92, shadowBlur: 20, shadowColor: "rgba(255, 178, 63, .92)" },
+        emphasis: { disabled: true },
         data: cityPoints
       }
     ]
@@ -517,16 +481,33 @@ function cityCoord(city) {
   return CITY_COORDS[clean] || CITY_COORDS[clean.replace(/市$/, "")] || null;
 }
 
-function normalizeProvinceName(value) {
-  const text = String(value || "").trim();
-  if (!text) return "未知";
-  return text
-    .replace(/省$|市$|回族自治区$|壮族自治区$|维吾尔自治区$|自治区$|特别行政区$/g, "")
-    .replace(/^内蒙古.*/, "内蒙古")
-    .replace(/^广西.*/, "广西")
-    .replace(/^宁夏.*/, "宁夏")
-    .replace(/^新疆.*/, "新疆")
-    .replace(/^西藏.*/, "西藏");
+function buildCityLightPoints(cities) {
+  const points = [];
+  for (const item of cities) {
+    const count = Number(item.count || 0);
+    const city = String(item.city || "");
+    const coord = cityCoord(city);
+    if (!coord || !count) continue;
+
+    if (city.includes("上海")) {
+      for (let index = 0; index < count; index += 1) {
+        const [lng, lat] = jitterShanghai(index, count);
+        points.push({ name: `${city}-${index + 1}`, value: [lng, lat, 6.5] });
+      }
+    } else {
+      points.push({ name: city, value: [...coord, 7 + Math.min(20, Math.sqrt(count) * 5)] });
+    }
+  }
+  return points;
+}
+
+function jitterShanghai(index, total) {
+  const angle = index * 2.399963229728653;
+  const radius = Math.sqrt((index + 0.5) / Math.max(total, 1));
+  return [
+    121.4737 + Math.cos(angle) * radius * 0.54,
+    31.2304 + Math.sin(angle) * radius * 0.38
+  ];
 }
 
 async function loadMemberFromToken() {

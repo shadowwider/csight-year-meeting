@@ -490,12 +490,12 @@ function renderStats(payload) {
   if (!grid) return;
 
   const items = [
-    ["成员总数", stats.total_members ?? stats.totalMembers],
+    ["成员总数", stats.total_members ?? stats.totalMembers ?? stats.members],
     ["已确认资料", stats.confirmed_members ?? stats.confirmedMembers],
     ["问卷回应", stats.survey_responses ?? stats.responses],
-    ["愿意参加年会", stats.will_attend ?? stats.attending],
+    ["愿意参加年会", stats.will_attend ?? stats.attending ?? stats.attendees],
     ["集市有兴趣", stats.market_interest ?? stats.marketInterested],
-    ["恢复请求", stats.recovery_pending ?? stats.pendingRecovery]
+    ["恢复请求", stats.recovery_pending ?? stats.pendingRecovery ?? stats.recoveryPending]
   ].filter((item) => item[1] !== undefined && item[1] !== null);
 
   if (!items.length) {
@@ -606,6 +606,10 @@ async function loadAdminData() {
 async function importCsv() {
   const type = $("#csvType").value;
   const csv = $("#csvText").value;
+  if (type !== "members") {
+    setMessage($("#csvMsg"), "error", "当前 MVP 只支持导入成员名单。问卷、集市和参会名单请使用导出。");
+    return;
+  }
   if (!csv.trim()) {
     setMessage($("#csvMsg"), "error", "请先粘贴要导入的 CSV 文本。");
     return;

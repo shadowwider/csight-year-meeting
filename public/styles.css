@@ -593,7 +593,7 @@ h3 {
 }
 
 .city-map {
-  min-height: 300px;
+  min-height: 430px;
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 12px;
@@ -605,12 +605,13 @@ h3 {
 
 .map-chart {
   position: relative;
-  min-height: 150px;
+  min-height: 285px;
   border: 1px solid rgba(64, 94, 124, .14);
   background:
     linear-gradient(112deg, transparent 0 38%, rgba(64, 94, 124, .08) 38.2%, transparent 38.8% 100%),
     linear-gradient(35deg, transparent 0 54%, rgba(79, 122, 90, .08) 54.2%, transparent 54.8% 100%),
-    rgba(255, 253, 248, .46);
+    radial-gradient(circle at 76% 62%, rgba(230, 201, 106, .18), transparent 36%),
+    rgba(255, 253, 248, .66);
   overflow: hidden;
 }
 

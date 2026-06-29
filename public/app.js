@@ -14,6 +14,31 @@ const state = {
   adminLoaded: false
 };
 
+const CITY_COORDS = {
+  "上海市": [121.4737, 31.2304],
+  "上海": [121.4737, 31.2304],
+  "台州市": [121.4208, 28.6557],
+  "台州": [121.4208, 28.6557],
+  "杭州市": [120.1551, 30.2741],
+  "杭州": [120.1551, 30.2741],
+  "北京市": [116.4074, 39.9042],
+  "北京": [116.4074, 39.9042],
+  "安庆市": [117.0638, 30.5435],
+  "安庆": [117.0638, 30.5435],
+  "南京市": [118.7969, 32.0603],
+  "南京": [118.7969, 32.0603],
+  "南通市": [120.8943, 31.9802],
+  "南通": [120.8943, 31.9802],
+  "苏州市": [120.5853, 31.2989],
+  "苏州": [120.5853, 31.2989],
+  "嘉兴市": [120.7555, 30.7461],
+  "嘉兴": [120.7555, 30.7461],
+  "温州市": [120.6994, 27.9949],
+  "温州": [120.6994, 27.9949],
+  "武汉市": [114.3054, 30.5931],
+  "武汉": [114.3054, 30.5931]
+};
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
@@ -425,27 +450,71 @@ async function renderChinaMap(node, cities) {
   const values = [...provinceValues.values()];
   const max = Math.max(1, ...values);
   const seriesData = [...provinceValues.entries()].map(([name, value]) => ({ name, value }));
+  const cityPoints = cities
+    .map((item) => {
+      const coord = cityCoord(item.city);
+      return coord ? { name: item.city, value: [...coord, Number(item.count || 0)] } : null;
+    })
+    .filter(Boolean);
   state.mapChart = state.mapChart || window.echarts.init(node, null, { renderer: "svg" });
   state.mapChart.setOption({
+    backgroundColor: "transparent",
     tooltip: { trigger: "item", formatter: (params) => `${params.name}<br>${params.value || 0} 位伙伴` },
     visualMap: {
       min: 0,
       max,
-      show: false,
-      inRange: { color: ["#f8f3ea", "#d8e6d7", "#8fb98d", "#b7663c"] }
+      show: true,
+      left: 8,
+      bottom: 8,
+      itemWidth: 8,
+      itemHeight: 54,
+      text: ["亮", "未亮"],
+      textStyle: { color: "#736c62", fontSize: 10 },
+      calculable: false,
+      inRange: { color: ["#efe8dd", "#dfeedd", "#a8cf8a", "#e6c96a", "#b7663c"] },
+      outOfRange: { color: ["#eee8df"] }
     },
-    series: [{
-      type: "map",
+    geo: {
       map: "china",
-      roam: false,
-      selectedMode: false,
-      label: { show: false },
-      emphasis: { label: { show: false }, itemStyle: { areaColor: "#c79a43" } },
-      itemStyle: { borderColor: "#d9d0c2", borderWidth: 0.8, areaColor: "#f8f3ea" },
-      data: seriesData
-    }]
+      roam: true,
+      zoom: 1.22,
+      scaleLimit: { min: 1, max: 4 },
+      itemStyle: { borderColor: "#d1c7b8", borderWidth: 0.8, areaColor: "#eee8df" },
+      emphasis: { label: { show: false }, itemStyle: { areaColor: "#f2c35d" } }
+    },
+    series: [
+      {
+        type: "map",
+        map: "china",
+        geoIndex: 0,
+        data: seriesData
+      },
+      {
+        type: "effectScatter",
+        coordinateSystem: "geo",
+        zlevel: 3,
+        rippleEffect: { brushType: "stroke", scale: 4.2 },
+        symbolSize: (value) => 7 + Math.min(24, Math.sqrt(value[2]) * 3.2),
+        itemStyle: { color: "#b7663c", shadowBlur: 16, shadowColor: "rgba(183, 102, 60, .68)" },
+        label: {
+          show: true,
+          formatter: (params) => params.data.value[2] >= 2 ? params.name.replace(/市$/, "") : "",
+          position: "right",
+          color: "#5f574d",
+          fontSize: 10,
+          backgroundColor: "rgba(255,253,248,.78)",
+          padding: [1, 4]
+        },
+        data: cityPoints
+      }
+    ]
   });
   window.addEventListener("resize", () => state.mapChart?.resize(), { once: true });
+}
+
+function cityCoord(city) {
+  const clean = String(city || "").trim();
+  return CITY_COORDS[clean] || CITY_COORDS[clean.replace(/市$/, "")] || null;
 }
 
 function normalizeProvinceName(value) {
@@ -645,9 +714,10 @@ async function submitSurvey(event) {
 
 async function submitRecovery(event) {
   event.preventDefault();
+  const form = event.currentTarget;
   const button = $("#recoverSubmit");
   const message = $("#recoverMsg");
-  const data = formToObject(event.currentTarget);
+  const data = formToObject(form);
   if (!data.phone && !data.old_contact && !data.wechat) {
     setMessage(message, "error", "请至少填写当前手机号或一个旧联系方式，方便秘书处核对。");
     return;
@@ -657,7 +727,7 @@ async function submitRecovery(event) {
   try {
     await apiRequest("/api/recovery", { body: data });
     setMessage(message, "ok", "已提交。秘书处会人工核对，不会自动展示你的旧资料。");
-    event.currentTarget.reset();
+    form.reset();
   } catch (error) {
     setMessage(message, "error", `${error.message || "提交失败"}。如果一直失败，请直接联系秘书处。`);
   } finally {

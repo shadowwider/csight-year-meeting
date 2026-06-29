@@ -77,6 +77,13 @@ export default {
       if (error instanceof NotFoundError) {
         return jsonError(404, "not_found", error.message);
       }
+      if (error instanceof Error && /no such table|SQLITE_ERROR/i.test(error.message)) {
+        return jsonError(
+          500,
+          "d1_migrations_missing",
+          "远端 D1 数据库尚未完成初始化，请先执行数据库迁移。",
+        );
+      }
 
       console.error(error);
       return jsonError(500, "internal_error", "服务暂时开小差了，请稍后再试。");

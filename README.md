@@ -98,14 +98,16 @@ npx wrangler secret put ADMIN_PASSWORD
    npm install && npm run check
    ```
 
-6. 部署命令可使用 Workers Builds 默认的 `npx wrangler deploy`，或填写项目脚本：
+6. 部署命令必须使用项目脚本，让 D1 迁移先执行，再部署 Worker：
 
    ```text
    npm run deploy
    ```
 
+   不要使用裸命令 `npx wrangler deploy`，它不会自动初始化 D1 表结构。
+
 7. 确认 Cloudflare Worker 名称和 [wrangler.jsonc](wrangler.jsonc) 中的 `name` 一致：`csight-year-meeting`。
-8. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_PASSWORD` secret 已配置、远端迁移已执行。
+8. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_PASSWORD` secret 已配置。部署脚本会执行远端迁移。
 
 如果生产后台提示“管理员密码尚未配置”，说明 Worker 的 Secret 里还没有 `ADMIN_PASSWORD`，不是前端输入错误。进入 Worker 的 Settings -> Variables and Secrets，添加一个 Secret，名称必须是 `ADMIN_PASSWORD`。
 

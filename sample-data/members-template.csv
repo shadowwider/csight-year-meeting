@@ -1,0 +1,5 @@
+spirit_name,cohort,real_name,phone,wechat,email,province,city,company_title,focus_fields,current_status,self_intro,role,directory_visibility
+星桥,第1期,示例同学甲,10000000001,demo_wx_001,member001@example.test,浙江,杭州,示例项目 / 产品练习生,AI / 科技;教育,职场工作,正在用虚构数据测试导入流程,校友,internal
+小宇宙,第3期,示例同学乙,10000000002,demo_wx_002,member002@example.test,上海,上海,虚构工作室 / 内容创作者,内容创作;设计,自由职业,喜欢把复杂问题讲清楚,校友,alumni
+青柚,第8期,示例同学丙,10000000003,demo_wx_003,member003@example.test,广东,深圳,示例品牌 / 创业者,创业;商业 / 金融,创业中,在打磨一个不存在的样例品牌,校友,internal
+北辰,第12期,示例同学丁,10000000004,demo_wx_004,member004@example.test,北京,北京,示例实验室 / 学习者,公益;心理 / 咨询,转型/探索阶段,用样例身份验证通讯录字段,校友,alumni

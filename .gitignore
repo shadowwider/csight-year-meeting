@@ -9,3 +9,5 @@ dist/
 *.xlsx
 *.xls
 !public/csightlogo.png
+!sample-data/
+!sample-data/members-template.csv

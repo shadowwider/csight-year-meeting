@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fbf8f0">
+  <title>创见 2026 Passion 年会 · 校友通讯录更新</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#home" data-route="home" aria-label="回到首页">
+          <span class="logo-mark"><img src="./csightlogo.png" alt="创见"></span>
+          <span class="brand-title">
+            <b>创见 Passion</b>
+            <span>2026 alumni gathering</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="主要导航">
+          <button type="button" data-route="home" class="on">公开信</button>
+          <button type="button" data-route="verify">身份核验</button>
+          <button type="button" data-route="contact">通讯录</button>
+          <button type="button" data-route="survey">问卷</button>
+          <button type="button" data-route="recover">人工恢复</button>
+          <button type="button" data-route="admin-login" class="admin-entry">后台</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="page active">
+        <div class="wrap">
+          <div class="status-strip" aria-live="polite">
+            <span id="configStatus" class="status-pill open">2026 Passion</span>
+            <span class="chip gold">7月25日 · 上海田林路</span>
+            <span class="chip indigo">通讯录更新中</span>
+            <span class="chip moss">创见集市招募意向</span>
+          </div>
+
+          <div id="configMessage" class="message warn hidden"></div>
+
+          <div class="hero">
+            <article class="letter-panel">
+              <div class="kicker">A letter from Csight</div>
+              <h1>从热爱出发，<br>让连接继续生长</h1>
+              <p class="sub">一封写给创见伙伴的年会邀请，也是一张重新认识彼此的通讯录。</p>
+
+              <div class="letter-body">
+                <p class="salu">亲爱的创见伙伴：</p>
+                <p>见字如面。又到了我们一年一度相聚的时候。</p>
+                <p>2026年7月25日，我们会在上海徐汇田林路130号20号楼相见。今年年会的主题是 <span class="hl">Passion：从热爱出发，让人生事业持续生长</span>。</p>
+                <p>每次筹备年会，我们都会想起那些熟悉的面孔：曾经一起讨论到深夜的人，一起探索人生方向的人，一起分享困惑与热爱的人。不知不觉，创见已经陪伴大家走过了很多年。</p>
+                <p>这些年里，有人走向新的城市，有人开始创业，有人进入全新的行业，也有人仍在不断寻找自己真正想做的事情。大家的轨迹或许越来越不同，但我们始终相信：那些曾经真实发生过的连接，不会因为时间过去而消失。</p>
+                <p>过去一年里，创见依然在尝试做一件简单但不容易的事情：让那些认真探索自己、关心世界的人，能够彼此连接。</p>
+
+                <div class="letter-section">
+                  <h2>这一年，创见仍在发生</h2>
+                  <p><b>1st JOB</b> 持续开展，迎来了第12期伙伴，越来越多年轻人在这里开启探索之旅。</p>
+                  <p><b>即行工作坊</b> 每月如约举办，让不同城市的伙伴有机会在线下重新相遇、交流与学习。</p>
+                  <p><b>石头村</b> 持续生长，成为更多伙伴探索自我、共同生活与实践共创的空间。</p>
+                  <p><b>百宝乡</b> 开启了新的运营模式，「<b>百宝开箱</b>」播客也坚持每月更新，与大家分享真实的故事和思考。</p>
+                  <p><b>编辑部</b> 完成了创见首本书的编辑工作，历经数月打磨，即将在今年年会上正式与大家见面。</p>
+                  <p>而 <b>秘书处</b> 也继续默默作为整个组织的连接者，与各个项目协同前行，让每一次活动、每一次相聚都得以发生。</p>
+                </div>
+
+                <div class="letter-section">
+                  <h2>接下来，我们想再见面</h2>
+                  <p>校友会活动部「<b>创见101</b>」将围绕不同主题发起季度活动，希望让更多校友通过轻社交的方式，发掘共同的兴趣、议题和好奇心，再次产生连接。</p>
+                  <p>7月中旬的主题是「见面吧」，主打久别相逢，新老校友热热闹闹重新认识；8月至9月锁定「耍起来、趣玩」；10月至12月的「向往的生活」也会快乐上线。</p>
+                  <p>今年的创见年会，我们也将做一次新的尝试：增加「<b>创见集市</b>」。我们希望把年会从“观看”变成“参与”，让更多伙伴有机会带着自己的作品、兴趣和热爱来到现场，与大家分享。</p>
+                  <p>它可能是一件实体作品，一项技能，一段经历，也可能是你正在认真投入的一件事。</p>
+                </div>
+
+                <p>因此，我们希望通过这份问卷更新校友信息，重新认识现在的你；回顾过去一年的活动体验；了解大家未来活动的期待；也收集年会集市的共创意向。</p>
+                <p>感谢你愿意花几分钟填写。也期待在未来的活动中再次相见。</p>
+                <div class="sig">
+                  校友会秘书处
+                  <small>2026 Passion 年会前夕</small>
+                </div>
+              </div>
+            </article>
+
+            <aside class="side-stack">
+              <div class="card cta-card">
+                <div class="kicker">2026 annual gathering</div>
+                <h2>今年 7.25，回来见一面</h2>
+                <p class="mini-copy">先核验身份，再更新通讯录。完整问卷约 5 分钟，帮助秘书处更好地设计年会和未来活动。</p>
+                <dl class="event-list">
+                  <div><dt>时间</dt><dd>2026年7月25日 12:00 签到，13:00 开始</dd></div>
+                  <div><dt>地点</dt><dd>上海市徐汇区田林路130号20号楼</dd></div>
+                  <div><dt>主题</dt><dd>Passion · 从热爱出发</dd></div>
+                </dl>
+                <div class="actions">
+                  <button class="btn" type="button" data-route="verify">开始更新通讯录</button>
+                  <button class="btn secondary" type="button" data-route="survey">直接看问卷</button>
+                </div>
+              </div>
+
+              <div class="star-map" aria-label="创见星图装饰">
+                <div class="map-title">星图没有熄灭，只是在等新的坐标。</div>
+                <div class="map-note">你的城市、近况、热爱和可连接方向，会帮助老朋友重新找到你。</div>
+              </div>
+
+              <div class="card flat">
+                <div class="kicker">Current rhythm</div>
+                <div class="data-grid compact">
+                  <div class="data-item">
+                    <div class="k">年会</div>
+                    <div class="v">7月25日</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">通讯录</div>
+                    <div class="v">开放更新</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">问卷状态</div>
+                    <div id="homeSurveyStatus" class="v">等待接口同步</div>
+                  </div>
+                  <div class="data-item">
+                    <div class="k">集市</div>
+                    <div class="v">收集意向</div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="verify" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 01 · Find your star</div>
+              <h2>先找到你在创见通讯录里的位置</h2>
+              <p>期数、精灵名和手机号只用于身份核验。换过手机号或不确定记录时，可以提交人工恢复。</p>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div class="step on"><b>01</b>身份核验</div>
+            <div class="step"><b>02</b>通讯录</div>
+            <div class="step"><b>03</b>年会问卷</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+
+          <form id="verifyForm" class="card">
+            <div class="form-grid">
+              <div class="field">
+                <label for="verifyCohort">所在期数</label>
+                <select id="verifyCohort" name="cohort" autocomplete="off">
+                  <option value="">不确定</option>
+                  <option>第1期</option>
+                  <option>第2期</option>
+                  <option>第3期</option>
+                  <option>第4期</option>
+                  <option>第5期</option>
+                  <option>第6期</option>
+                  <option>第7期</option>
+                  <option>第8期</option>
+                  <option>第9期</option>
+                  <option>第10期</option>
+                  <option>第11期</option>
+                  <option>第12期</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="verifySpiritName">精灵名 / 常用称呼</label>
+                <input id="verifySpiritName" name="spirit_name" placeholder="如：月见" autocomplete="nickname">
+              </div>
+              <div class="field">
+                <label for="verifyPhone">手机号</label>
+                <input id="verifyPhone" name="phone" class="mono" inputmode="tel" maxlength="18" placeholder="用于核验，不会公开" autocomplete="tel">
+              </div>
+            </div>
+            <div class="actions">
+              <button id="verifySubmit" class="btn" type="submit">找到我的记录</button>
+              <button class="btn ghost" type="button" data-route="recover">我换手机号 / 记不清信息</button>
+            </div>
+            <div id="verifyMsg" class="message hidden" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="contact" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 02 · Contact starmap</div>
+              <h2>确认一下，今年还能怎样找到你</h2>
+              <p>这些信息将用于秘书处联络、活动邀请和校友连接。公开范围以你的授权为准。</p>
+            </div>
+            <span class="status-pill open">通讯录开放</span>
+          </div>
+
+          <div class="progress">
+            <div class="step done"><b>01</b>身份核验</div>
+            <div class="step on"><b>02</b>通讯录</div>
+            <div class="step"><b>03</b>年会问卷</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+
+          <div id="memberNotice" class="message warn">请先完成身份核验。核验成功后，这里会从接口读取你的当前资料。</div>
+
+          <div id="memberSummary" class="identity-card hidden">
+            <div id="memberAvatar" class="avatar">见</div>
+            <div>
+              <h3 id="memberTitle">创见伙伴</h3>
+              <div id="memberMeta" class="meta">等待资料同步</div>
+            </div>
+            <div class="actions">
+              <button class="btn moss" type="button" id="contactConfirmBtn">信息无误，确认更新</button>
+              <button class="btn secondary" type="button" data-route="survey">继续填写问卷</button>
+            </div>
+          </div>
+
+          <form id="contactForm" class="card is-disabled" aria-disabled="true">
+            <div class="form-grid two">
+              <div class="field">
+                <label for="contactSpiritName">精灵名</label>
+                <input id="contactSpiritName" name="spirit_name" autocomplete="nickname">
+              </div>
+              <div class="field">
+                <label for="contactRealName">真实姓名</label>
+                <input id="contactRealName" name="real_name" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="contactPhone">手机号</label>
+                <input id="contactPhone" name="phone" class="mono" inputmode="tel" autocomplete="tel">
+              </div>
+              <div class="field">
+                <label for="contactWechat">微信号</label>
+                <input id="contactWechat" name="wechat" class="mono" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="contactEmail">邮箱</label>
+                <input id="contactEmail" name="email" type="email" autocomplete="email">
+              </div>
+              <div class="field">
+                <label for="contactCity">当前所在城市</label>
+                <input id="contactCity" name="city" autocomplete="address-level2">
+              </div>
+              <div class="field">
+                <label for="contactStatus">当前状态</label>
+                <select id="contactStatus" name="current_status">
+                  <option value="">请选择</option>
+                  <option>在读学生</option>
+                  <option>职场工作</option>
+                  <option>创业中</option>
+                  <option>自由职业</option>
+                  <option>转型/探索阶段</option>
+                  <option>其他</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="contactCompany">公司 / 角色</label>
+                <input id="contactCompany" name="company_title" placeholder="如：AI产品 / 自由摄影师">
+              </div>
+            </div>
+            <div class="field stack-space">
+              <label for="contactFocus">目前关注或从事的领域</label>
+              <input id="contactFocus" name="focus_fields" placeholder="如：AI / 教育 / 内容创作">
+            </div>
+            <div class="field stack-space">
+              <label for="contactIntro">用一句话介绍现在的自己</label>
+              <textarea id="contactIntro" name="self_intro" placeholder="白天产品经理，晚上弹吉他。"></textarea>
+            </div>
+            <div class="field stack-space">
+              <label for="directoryVisibility">校友通讯录授权</label>
+              <select id="directoryVisibility" name="directory_visibility">
+                <option value="alumni">愿意公开基础信息给校友查看和联结</option>
+                <option value="internal">仅供秘书处内部留存</option>
+              </select>
+            </div>
+            <div class="message warn">提交后以后端保存结果为准。若接口暂时不可用，请稍后再试或联系秘书处。</div>
+            <div class="actions">
+              <button id="contactSubmit" class="btn" type="submit">保存通讯录更新</button>
+              <button class="btn ghost" type="button" data-route="survey">跳到年会问卷</button>
+            </div>
+            <div id="contactMsg" class="message hidden" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="survey" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Step 03 · Passion survey</div>
+              <h2>年会问卷：更新近况，也一起设计未来一年</h2>
+              <p>问题按年会问卷信息整理。提交需要先完成核验，草稿只保存在本机浏览器。</p>
+            </div>
+            <span class="status-pill open">问卷开放</span>
+          </div>
+
+          <div class="progress">
+            <div class="step done"><b>01</b>身份核验</div>
+            <div class="step done"><b>02</b>通讯录</div>
+            <div class="step on"><b>03</b>年会问卷</div>
+            <div class="step"><b>04</b>完成</div>
+          </div>
+
+          <form id="surveyForm" class="card">
+            <div class="question first">
+              <div class="q-label">年会信息 · 单选</div>
+              <h3>今年 7.25 的 2026 Passion 年会，你是否参加？</h3>
+              <div class="options">
+                <label class="option"><input type="radio" name="will_attend" value="会参加" required> 会参加</label>
+                <label class="option"><input type="radio" name="will_attend" value="尽量参加"> 尽量参加，还需确认安排</label>
+                <label class="option"><input type="radio" name="will_attend" value="暂不参加"> 暂不参加</label>
+                <label class="option"><input type="radio" name="will_attend" value="还不确定"> 还不确定</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第一部分 · 基本信息补充</div>
+              <h3>当前状态</h3>
+              <div class="options">
+                <label class="option"><input type="radio" name="current_status" value="在读学生"> 在读学生</label>
+                <label class="option"><input type="radio" name="current_status" value="职场工作"> 职场工作</label>
+                <label class="option"><input type="radio" name="current_status" value="创业中"> 创业中</label>
+                <label class="option"><input type="radio" name="current_status" value="自由职业"> 自由职业</label>
+                <label class="option"><input type="radio" name="current_status" value="转型/探索阶段"> 转型/探索阶段</label>
+                <label class="option"><input type="radio" name="current_status" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第一部分 · 多选</div>
+              <h3>你目前主要关注或从事的领域</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="focus_fields" value="AI / 科技"> AI / 科技</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="教育"> 教育</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="内容创作"> 内容创作</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="产品 / 运营"> 产品 / 运营</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="设计"> 设计</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="商业 / 金融"> 商业 / 金融</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="心理 / 咨询"> 心理 / 咨询</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="公益"> 公益</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="创业"> 创业</label>
+                <label class="option"><input type="checkbox" name="focus_fields" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第一部分 · 长文本</div>
+              <h3>用一句话介绍现在的自己</h3>
+              <textarea name="self_intro" placeholder="在杭州做AI产品，希望科技真正帮助教育。"></textarea>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第二部分 · 多选</div>
+              <h3>过去一年，你是否参加过以下活动？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="activities_joined" value="即行工作坊"> 即行工作坊</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="2025年“传承”年会"> 2025年“传承”年会</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="石头村活动"> 石头村活动</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="1st JOB 工作坊"> 1st JOB 工作坊</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="收听百宝开箱播客"> 收听百宝开箱播客</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="领导力2.0共研课"> 领导力2.0共研课</label>
+                <label class="option"><input type="checkbox" name="activities_joined" value="以上都没有参加"> 以上都没有参加</label>
+              </div>
+              <div class="field stack-space">
+                <label for="activityOther">其他参加过的活动</label>
+                <input id="activityOther" name="activity_other" placeholder="可以补充其他活动">
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第二部分 · 长文本</div>
+              <h3>如果参加过，哪一次活动让你印象最深？请说说为什么</h3>
+              <textarea name="memorable_activity"></textarea>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第二部分 · 多选</div>
+              <h3>过去一年，你觉得创见活动最有价值的是？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="activity_value" value="认识新朋友"> 认识新朋友</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="深度交流"> 深度交流</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="获得启发"> 获得启发</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="学习新知识"> 学习新知识</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="找到行动动力"> 找到行动动力</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="保持与创见的连接"> 保持与创见的连接</label>
+                <label class="option"><input type="checkbox" name="activity_value" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第二部分 · 长文本</div>
+              <h3>你觉得目前创见活动还有哪些可以优化的地方？</h3>
+              <textarea name="activity_improvements"></textarea>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第三部分 · 多选</div>
+              <h3>未来一年，你希望参加哪些活动？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="future_activities" value="即行工作坊（月度）"> 即行工作坊（月度）</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="创见101主题活动（月度）"> 创见101主题活动（月度）</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="校友年会"> 校友年会</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="城市小聚"> 城市小聚</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="主题分享会"> 主题分享会</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="共学活动"> 共学活动</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="户外活动"> 户外活动</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="创作者交流"> 创作者交流</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="线上活动"> 线上活动</label>
+                <label class="option"><input type="checkbox" name="future_activities" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第三部分 · 多选</div>
+              <h3>你最希望未来活动关注哪些主题？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="future_topics" value="AI与未来"> AI与未来</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="职业发展"> 职业发展</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="创业与创新"> 创业与创新</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="创作者成长"> 创作者成长</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="心理与个人成长"> 心理与个人成长</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="教育"> 教育</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="社会议题"> 社会议题</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="生活方式"> 生活方式</label>
+                <label class="option"><input type="checkbox" name="future_topics" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第三部分 · 多选</div>
+              <h3>如果未来有机会参与活动共创，你更愿意以什么方式参与？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="参加活动"> 参加活动</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="分享经验"> 分享经验</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="担任嘉宾"> 担任嘉宾</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="协助组织"> 协助组织</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="提供创意建议"> 提供创意建议</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="视情况参与"> 视情况参与</label>
+                <label class="option"><input type="checkbox" name="co_creation_roles" value="暂时不考虑"> 暂时不考虑</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第四部分 · 创见集市</div>
+              <h3>你是否有兴趣参与创见集市？</h3>
+              <p class="mini-copy">今年年会首次增加「创见集市」，邀请校友带着作品、兴趣、技能或正在投入的项目来到现场展示、义卖、交流。本次仅收集意向，筹备组会统一评估后再沟通。</p>
+              <div class="options">
+                <label class="option"><input type="radio" name="market_interest" value="有兴趣"> 有兴趣</label>
+                <label class="option"><input type="radio" name="market_interest" value="还不确定"> 还不确定</label>
+                <label class="option"><input type="radio" name="market_interest" value="暂无兴趣"> 暂无兴趣</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第四部分 · 长文本</div>
+              <h3>如果有兴趣，你希望展示什么内容？</h3>
+              <textarea name="market_description" placeholder="可以描述展示内容、展示形式，以及希望大家获得什么体验。"></textarea>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第四部分 · 多选</div>
+              <h3>你的展示属于哪种类型？</h3>
+              <div class="options">
+                <label class="option"><input type="checkbox" name="market_types" value="实体产品"> 实体产品</label>
+                <label class="option"><input type="checkbox" name="market_types" value="创作作品"> 创作作品</label>
+                <label class="option"><input type="checkbox" name="market_types" value="创业项目"> 创业项目</label>
+                <label class="option"><input type="checkbox" name="market_types" value="AI作品"> AI作品</label>
+                <label class="option"><input type="checkbox" name="market_types" value="技能展示"> 技能展示</label>
+                <label class="option"><input type="checkbox" name="market_types" value="音乐表演"> 音乐表演</label>
+                <label class="option"><input type="checkbox" name="market_types" value="艺术表演"> 艺术表演</label>
+                <label class="option"><input type="checkbox" name="market_types" value="互动体验"> 互动体验</label>
+                <label class="option"><input type="checkbox" name="market_types" value="小型工作坊"> 小型工作坊</label>
+                <label class="option"><input type="checkbox" name="market_types" value="其他"> 其他</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第四部分 · 单选</div>
+              <h3>是否愿意接受年会组后续联系？</h3>
+              <div class="options">
+                <label class="option"><input type="radio" name="followup_consent" value="愿意"> 愿意</label>
+                <label class="option"><input type="radio" name="followup_consent" value="视情况而定"> 视情况而定</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">第五部分 · 通讯录授权</div>
+              <h3>是否愿意加入创见校友通讯录？</h3>
+              <div class="options">
+                <label class="option"><input type="radio" name="directory_visibility" value="alumni"> 愿意公开基础信息给校友查看和联结</label>
+                <label class="option"><input type="radio" name="directory_visibility" value="internal"> 仅供秘书处内部留存</label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="q-label">最后 · 长文本</div>
+              <h3>还有什么想对创见说的话？</h3>
+              <textarea name="message_to_csight"></textarea>
+            </div>
+
+            <div class="actions">
+              <button id="surveySubmit" class="btn" type="submit">提交问卷</button>
+              <button id="saveDraftBtn" class="btn ghost" type="button">保存本地草稿</button>
+            </div>
+            <div id="surveyMsg" class="message hidden" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="done" class="page">
+        <div class="wrap narrow">
+          <div class="done-hero">
+            <div class="done-mark">见</div>
+            <div class="kicker">Completed</div>
+            <h2>收到。谢谢你让今年的创见星图又亮起一格。</h2>
+            <p class="sub">这份问卷不仅帮助我们更新校友信息，也帮助我们一起设计未来一年的创见。期待在线下工作坊、创见101活动，以及今年的创见12周年 Passion 年会上与你再次相见。</p>
+            <div class="actions center">
+              <button class="btn" type="button" data-route="home">回到公开信</button>
+              <button class="btn secondary" type="button" data-route="contact">修改通讯录</button>
+              <button class="btn ghost" type="button" data-route="survey">修改问卷</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recover" class="page">
+        <div class="wrap narrow">
+          <div class="section-head">
+            <div>
+              <div class="kicker">Recovery</div>
+              <h2>找不到记录时，交给秘书处人工核对</h2>
+              <p>手机号换了、精灵名记不清、期数不确定，都可以从这里提交。不会自动展示任何旧资料。</p>
+            </div>
+          </div>
+
+          <form id="recoverForm" class="card">
+            <div class="form-grid two">
+              <div class="field">
+                <label for="recoverRealName">真实姓名</label>
+                <input id="recoverRealName" name="real_name" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="recoverSpiritName">可能的精灵名</label>
+                <input id="recoverSpiritName" name="spirit_name" autocomplete="nickname">
+              </div>
+              <div class="field">
+                <label for="recoverCohort">所在期数</label>
+                <select id="recoverCohort" name="cohort">
+                  <option value="">不确定</option>
+                  <option>第1期</option>
+                  <option>第2期</option>
+                  <option>第3期</option>
+                  <option>第4期</option>
+                  <option>第5期</option>
+                  <option>第6期</option>
+                  <option>第7期</option>
+                  <option>第8期</option>
+                  <option>第9期</option>
+                  <option>第10期</option>
+                  <option>第11期</option>
+                  <option>第12期</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="recoverPhone">当前手机号</label>
+                <input id="recoverPhone" name="phone" class="mono" inputmode="tel" autocomplete="tel">
+              </div>
+              <div class="field">
+                <label for="recoverOldContact">旧手机号 / 微信 / 邮箱任一</label>
+                <input id="recoverOldContact" name="old_contact">
+              </div>
+              <div class="field">
+                <label for="recoverPreference">希望管理员如何联系你</label>
+                <select id="recoverPreference" name="contact_preference">
+                  <option>微信优先</option>
+                  <option>电话优先</option>
+                  <option>邮箱优先</option>
+                </select>
+              </div>
+            </div>
+            <div class="field stack-space">
+              <label for="recoverNote">补充说明</label>
+              <textarea id="recoverNote" name="note" placeholder="比如：我换过手机号，可能旧名单里还是之前的号码。"></textarea>
+            </div>
+            <div class="actions">
+              <button id="recoverSubmit" class="btn" type="submit">提交人工恢复</button>
+              <button class="btn ghost" type="button" data-route="verify">返回核验</button>
+            </div>
+            <div id="recoverMsg" class="message hidden" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="admin-login" class="page">
+        <div class="wrap narrow">
+          <div class="card login-card">
+            <div class="kicker">Admin</div>
+            <h2>进入创见后台</h2>
+            <p class="mini-copy">请输入后端提供的管理 token。token 会保存在当前标签页的 sessionStorage，关闭标签页后失效。</p>
+            <div class="field stack-space">
+              <label for="adminToken">管理 token</label>
+              <input id="adminToken" type="password" autocomplete="off" placeholder="Bearer token">
+            </div>
+            <div class="actions">
+              <button id="adminTokenSave" class="btn indigo" type="button">保存并进入后台</button>
+              <button id="adminTokenClear" class="btn ghost" type="button">清除 token</button>
+              <button class="btn secondary" type="button" data-route="home">返回公开页</button>
+            </div>
+            <div id="adminLoginMsg" class="message hidden" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin" class="page">
+        <div class="wrap">
+          <div class="admin-shell">
+            <aside class="admin-side">
+              <div class="title">
+                <b>创见 Admin</b>
+                <span>2026 passion system</span>
+              </div>
+              <nav class="admin-nav" aria-label="管理后台导航">
+                <button type="button" data-admin-panel="dashboard" class="on">控制台</button>
+                <button type="button" data-admin-panel="members">成员</button>
+                <button type="button" data-admin-panel="responses">问卷</button>
+                <button type="button" data-admin-panel="recovery">恢复</button>
+                <button type="button" data-admin-panel="csv">CSV</button>
+              </nav>
+              <div class="admin-token-note">
+                <span>Token 已保存在当前会话</span>
+                <button id="adminLogout" class="plain-link" type="button">退出</button>
+              </div>
+            </aside>
+
+            <div class="admin-main">
+              <div class="admin-topline">
+                <div>
+                  <div class="kicker">Dashboard</div>
+                  <h2>2026 Passion 年会采集后台</h2>
+                </div>
+                <div class="actions inline">
+                  <button id="adminRefresh" class="btn indigo" type="button">刷新数据</button>
+                </div>
+              </div>
+              <div id="adminMsg" class="message hidden" aria-live="polite"></div>
+
+              <div id="admin-dashboard" class="admin-panel active">
+                <div id="statsGrid" class="stats">
+                  <div class="stat empty-state">等待接口返回统计</div>
+                </div>
+                <div class="task-list">
+                  <div class="task">
+                    <div>
+                      <b>成员资料</b>
+                      <span id="adminMembersSummary">等待 /api/admin/members</span>
+                    </div>
+                    <button class="btn ghost" type="button" data-admin-panel="members">查看</button>
+                  </div>
+                  <div class="task">
+                    <div>
+                      <b>问卷回应</b>
+                      <span id="adminResponsesSummary">等待 /api/admin/responses</span>
+                    </div>
+                    <button class="btn ghost" type="button" data-admin-panel="responses">查看</button>
+                  </div>
+                  <div class="task">
+                    <div>
+                      <b>人工恢复</b>
+                      <span id="adminRecoverySummary">等待 /api/admin/recovery</span>
+                    </div>
+                    <button class="btn ghost" type="button" data-admin-panel="recovery">处理</button>
+                  </div>
+                  <div class="task">
+                    <div>
+                      <b>CSV 导入导出</b>
+                      <span>用后端接口处理文本，不在前端臆造数据。</span>
+                    </div>
+                    <button class="btn ghost" type="button" data-admin-panel="csv">打开</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="admin-members" class="admin-panel">
+                <div class="section-head">
+                  <div>
+                    <div class="kicker">Members</div>
+                    <h2>成员名单</h2>
+                    <p>展示后端返回的成员列表；接口失败时保留空状态。</p>
+                  </div>
+                </div>
+                <div class="table">
+                  <table>
+                    <thead>
+                      <tr><th>期数</th><th>精灵名</th><th>真实姓名</th><th>城市</th><th>状态</th><th>微信</th><th>更新时间</th></tr>
+                    </thead>
+                    <tbody id="membersBody">
+                      <tr><td colspan="7" class="empty-cell">等待接口返回</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-responses" class="admin-panel">
+                <div class="section-head">
+                  <div>
+                    <div class="kicker">Responses</div>
+                    <h2>问卷结果</h2>
+                    <p>包含年会参加意向、活动反馈、创见集市意向等。</p>
+                  </div>
+                </div>
+                <div class="table">
+                  <table>
+                    <thead>
+                      <tr><th>成员</th><th>是否参加</th><th>当前状态</th><th>未来活动</th><th>集市意向</th><th>留言</th><th>提交时间</th></tr>
+                    </thead>
+                    <tbody id="responsesBody">
+                      <tr><td colspan="7" class="empty-cell">等待接口返回</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-recovery" class="admin-panel">
+                <div class="section-head">
+                  <div>
+                    <div class="kicker">Recovery</div>
+                    <h2>人工恢复请求</h2>
+                    <p>处理手机号变更、精灵名不一致和期数不确定。</p>
+                  </div>
+                </div>
+                <div class="table">
+                  <table>
+                    <thead>
+                      <tr><th>提交人</th><th>精灵名</th><th>期数</th><th>当前手机号</th><th>旧线索</th><th>状态</th><th>时间</th></tr>
+                    </thead>
+                    <tbody id="recoveryBody">
+                      <tr><td colspan="7" class="empty-cell">等待接口返回</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="admin-csv" class="admin-panel">
+                <div class="section-head">
+                  <div>
+                    <div class="kicker">CSV</div>
+                    <h2>CSV 文本导入 / 导出</h2>
+                    <p>导入和导出都调用后端接口，前端只负责提交文本与展示返回结果。</p>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="form-grid two">
+                    <div class="field">
+                      <label for="csvType">数据类型</label>
+                      <select id="csvType">
+                        <option value="members">成员名单</option>
+                        <option value="responses">问卷结果</option>
+                        <option value="recovery">恢复请求</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="csvMode">操作</label>
+                      <select id="csvMode">
+                        <option value="import">导入 CSV 文本</option>
+                        <option value="export">导出 CSV 文本</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="field stack-space">
+                    <label for="csvText">CSV 文本</label>
+                    <textarea id="csvText" class="mono csv-box" placeholder="导入时在这里粘贴 CSV；导出后结果也会显示在这里。"></textarea>
+                  </div>
+                  <div class="actions">
+                    <button id="csvImport" class="btn indigo" type="button">导入 CSV</button>
+                    <button id="csvExport" class="btn secondary" type="button">拉取导出</button>
+                    <button id="csvCopy" class="btn ghost" type="button">复制文本</button>
+                    <button id="csvDownload" class="btn ghost" type="button">下载文本</button>
+                  </div>
+                  <div id="csvMsg" class="message hidden" aria-live="polite"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
+

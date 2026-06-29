@@ -107,6 +107,8 @@ npx wrangler secret put ADMIN_PASSWORD
 7. 确认 Cloudflare Worker 名称和 [wrangler.jsonc](wrangler.jsonc) 中的 `name` 一致：`csight-year-meeting`。
 8. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_PASSWORD` secret 已配置、远端迁移已执行。
 
+如果生产后台提示“管理员密码尚未配置”，说明 Worker 的 Secret 里还没有 `ADMIN_PASSWORD`，不是前端输入错误。进入 Worker 的 Settings -> Variables and Secrets，添加一个 Secret，名称必须是 `ADMIN_PASSWORD`。
+
 参考：Cloudflare [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) 和 [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/)。
 
 ## 自定义域名绑定

@@ -557,7 +557,11 @@ async function loadMemberMap() {
     await renderChinaMap(chartNode, cities);
   } catch {
     const summary = $("#mapSummary");
-    if (summary) summary.textContent = "城市分布暂时无法同步。";
+    const list = $("#mapTopCities");
+    const chartNode = $("#mapChart");
+    if (summary) summary.textContent = "地图已加载，正在等待通讯录城市数据。";
+    if (list) list.innerHTML = "";
+    if (chartNode) await renderChinaMap(chartNode, []);
   }
 }
 

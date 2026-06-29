@@ -5,6 +5,7 @@ import {
   createMember,
   createRecoveryRequest,
   createVerificationToken,
+  findMemberCandidates,
   findVerifiedMember,
   getAdminStats,
   getMemberByToken,
@@ -113,6 +114,10 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return handleMemberCreate(request, env);
   }
 
+  if (request.method === "POST" && path === "/api/member/matches") {
+    return handleMemberMatches(request, env);
+  }
+
   if (request.method === "POST" && path === "/api/survey") {
     return handleSurvey(request, env, slug);
   }
@@ -211,6 +216,28 @@ async function handleMemberCreate(request: Request, env: Env): Promise<Response>
     verification_token: token.token,
     expiresAt: token.expiresAt,
   }, 201);
+}
+
+async function handleMemberMatches(request: Request, env: Env): Promise<Response> {
+  const body = await readJsonObject(request);
+  const candidates = await findMemberCandidates(env.DB, {
+    spiritName: textOrNull(getAliasedValue([body], ["spiritName", "spirit_name", "精灵名"])),
+    realName: textOrNull(getAliasedValue([body], ["realName", "real_name", "survey_name", "姓名", "真实姓名"])),
+    phone: textOrNull(getAliasedValue([body], ["phone", "手机号"])),
+    wechat: textOrNull(getAliasedValue([body], ["wechat", "微信号", "微信"])),
+  });
+  const issuedAt = nowIso();
+  const matches = await Promise.all(candidates.map(async (member) => {
+    const token = await createVerificationToken(env.DB, member.id, issuedAt);
+    return {
+      member,
+      token: token.token,
+      verificationToken: token.token,
+      verification_token: token.token,
+      expiresAt: token.expiresAt,
+    };
+  }));
+  return jsonOk({ matches });
 }
 
 async function handleSurvey(request: Request, env: Env, slug: string): Promise<Response> {

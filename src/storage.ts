@@ -161,6 +161,44 @@ export async function findVerifiedMember(
   return null;
 }
 
+export async function findMemberCandidates(
+  db: D1Database,
+  input: { spiritName?: string | null; realName?: string | null; phone?: string | null; wechat?: string | null },
+): Promise<Member[]> {
+  const spiritName = normalizeComparable(input.spiritName);
+  const realName = normalizeComparable(input.realName);
+  const phone = normalizePhone(input.phone);
+  const wechat = normalizeText(input.wechat);
+  const candidates: Member[] = [];
+  const seen = new Set<string>();
+
+  if (!spiritName && !realName && !phone && !wechat) {
+    return [];
+  }
+
+  const result = await db
+    .prepare(
+      `SELECT *
+       FROM members
+       WHERE (? <> '' AND LOWER(REPLACE(spirit_name, ' ', '')) = ?)
+          OR (? <> '' AND LOWER(REPLACE(COALESCE(real_name, ''), ' ', '')) = ?)
+          OR (? <> '' AND REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') = ?)
+          OR (? <> '' AND COALESCE(wechat, '') = ?)
+       ORDER BY cohort, spirit_name
+       LIMIT 20`,
+    )
+    .bind(spiritName, spiritName, realName, realName, phone, phone, wechat, wechat)
+    .all<MemberRow>();
+
+  for (const row of result.results ?? []) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    candidates.push(mapMember(row));
+  }
+
+  return candidates;
+}
+
 export async function createVerificationToken(
   db: D1Database,
   memberId: string,

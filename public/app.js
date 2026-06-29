@@ -371,6 +371,64 @@ function renderMember(member) {
   prefillSurveyFromMember(member);
 }
 
+function clearMemberMatches() {
+  $("#memberMatches")?.classList.add("hidden");
+  const list = $("#memberMatchesList");
+  if (list) list.innerHTML = "";
+}
+
+function renderMemberMatches(matches) {
+  const panel = $("#memberMatches");
+  const list = $("#memberMatchesList");
+  if (!panel || !list) return;
+  if (!matches.length) {
+    clearMemberMatches();
+    return;
+  }
+  panel.classList.remove("hidden");
+  list.innerHTML = matches.map((match, index) => {
+    const member = match.member || {};
+    const title = member.realName || member.real_name || member.spiritName || member.spirit_name || "未命名伙伴";
+    const spiritName = member.spiritName || member.spirit_name || "精灵名待确认";
+    const meta = [
+      member.cohort,
+      spiritName,
+      member.city,
+      member.phone ? maskPhone(member.phone) : ""
+    ].filter(Boolean).join(" · ");
+    return `
+      <div class="match-item">
+        <div>
+          <b>${escapeHtml(title)}</b>
+          <span>${escapeHtml(meta || "资料待确认")}</span>
+        </div>
+        <button class="btn secondary" type="button" data-match-index="${index}">更新这条</button>
+      </div>
+    `;
+  }).join("");
+  $$("[data-match-index]", list).forEach((button) => {
+    button.addEventListener("click", () => selectMemberMatch(matches[Number(button.dataset.matchIndex)]));
+  });
+}
+
+function selectMemberMatch(match) {
+  if (!match?.member) return;
+  const token = match.token || match.verification_token || match.verificationToken;
+  if (token) {
+    state.verifyToken = token;
+    sessionStorage.setItem(VERIFY_TOKEN_KEY, token);
+  }
+  renderMember(match.member);
+  clearMemberMatches();
+  setMessage($("#contactMsg"), "ok", "已选择这条通讯录记录。请确认并保存你的更新。");
+}
+
+function maskPhone(phone) {
+  const text = String(phone || "");
+  if (text.length < 7) return text;
+  return `${text.slice(0, 3)}****${text.slice(-4)}`;
+}
+
 function showVerifiedContactFallback(seed = {}) {
   state.member = null;
   const notice = $("#memberNotice");
@@ -602,6 +660,7 @@ async function submitContact(event) {
     }
     const member = normalizeObjectPayload(payload, ["member"]);
     if (member && Object.keys(member).length) renderMember(member);
+    clearMemberMatches();
     setMessage(message, "ok", isExistingMember ? "通讯录更新已保存。可以继续填写年会问卷。" : "新通讯录成员已添加。可以继续填写年会问卷。");
     loadMemberMap();
   } catch (error) {
@@ -653,6 +712,28 @@ function prefillContactFromSurvey(survey) {
   });
 }
 
+async function loadMemberMatchesFromSurvey(survey) {
+  const payload = {
+    spirit_name: survey.spirit_name,
+    real_name: survey.real_name || survey.survey_name,
+    phone: survey.phone,
+    wechat: survey.wechat
+  };
+  try {
+    const response = await apiRequest("/api/member/matches", { body: payload });
+    const data = normalizeObjectPayload(response, ["data"]);
+    const matches = normalizeListPayload(data, ["matches"]);
+    renderMemberMatches(matches);
+    if (matches.length) {
+      setMessage($("#contactMsg"), "warn", `问卷已保存。系统找到 ${matches.length} 条可能匹配的通讯录记录，请选择要更新哪一条；如果都不是，也可以直接新增。`);
+    }
+    return matches;
+  } catch {
+    clearMemberMatches();
+    return [];
+  }
+}
+
 async function submitSurvey(event) {
   event.preventDefault();
   const button = $("#surveySubmit");
@@ -680,8 +761,11 @@ async function submitSurvey(event) {
         renderMember(null);
         prefillContactFromSurvey(survey);
       }
-      setMessage($("#contactMsg"), "warn", "问卷已保存。请确认或补充通讯录；也可以选择暂不更新，直接完成。");
       route("contact");
+      const matches = await loadMemberMatchesFromSurvey(survey);
+      if (!matches.length) {
+        setMessage($("#contactMsg"), "warn", "问卷已保存。没有找到明显匹配的旧通讯录记录，你可以直接新增；也可以暂不更新。");
+      }
     } else {
       $("#doneContactBtn")?.classList.add("hidden");
       route("done");

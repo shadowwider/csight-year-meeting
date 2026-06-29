@@ -45,7 +45,7 @@ npm run dev
    npx wrangler d1 create csight-alumni-db
    ```
 
-3. 将命令输出的 `database_id` 填入 [wrangler.jsonc](wrangler.jsonc) 的 `d1_databases[0].database_id`。本项目约定：
+3. 将命令输出的真实 `database_id` 填入 [wrangler.jsonc](wrangler.jsonc) 的 `d1_databases[0].database_id`。不要保留 `00000000-0000-0000-0000-000000000000`，那个只代表本地 Wrangler D1，占位值部署到 Cloudflare 会报 `D1 binding 'DB' references database ... which was not found`。本项目约定：
 
    - binding：`DB`
    - database_name：`csight-alumni-db`
@@ -104,7 +104,7 @@ npx wrangler secret put ADMIN_PASSWORD
    npm run deploy
    ```
 
-7. 确认 Cloudflare Worker 名称和 [wrangler.jsonc](wrangler.jsonc) 中的 `name` 一致。
+7. 确认 Cloudflare Worker 名称和 [wrangler.jsonc](wrangler.jsonc) 中的 `name` 一致：`csight-year-meeting`。
 8. 在首次自动部署前，先确认远端 D1 已创建、`wrangler.jsonc` 中的 `database_id` 已替换、`ADMIN_PASSWORD` secret 已配置、远端迁移已执行。
 
 参考：Cloudflare [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) 和 [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/)。

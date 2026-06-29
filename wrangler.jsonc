@@ -1,5 +1,5 @@
 {
-  "name": "csight-alumni-passion",
+  "name": "csight-year-meeting",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-29",
   "assets": {
@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "csight-alumni-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "9866e783-ac07-4acb-8112-da2febe6ea46",
       "migrations_dir": "migrations"
     }
   ]

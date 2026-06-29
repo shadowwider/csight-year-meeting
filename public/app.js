@@ -618,14 +618,20 @@ function renderStats(payload) {
 function renderMembers(payload) {
   const rows = normalizeListPayload(payload, ["members", "items", "rows"]);
   $("#adminMembersSummary").textContent = rows.length ? `${rows.length} 条成员记录` : "接口未返回成员记录";
-  renderTable("#membersBody", rows, 7, (row) => `
+  renderTable("#membersBody", rows, 13, (row) => `
     <tr>
       <td>${escapeHtml(displayValue(row.cohort, ""))}</td>
       <td>${escapeHtml(displayValue(row.spirit_name || row.spiritName, ""))}</td>
       <td>${escapeHtml(displayValue(row.real_name || row.realName, ""))}</td>
-      <td>${escapeHtml(displayValue(row.city, ""))}</td>
-      <td>${escapeHtml(displayValue(row.current_status || row.currentStatus, ""))}</td>
+      <td class="mono">${escapeHtml(displayValue(row.phone, ""))}</td>
       <td class="mono">${escapeHtml(displayValue(row.wechat, ""))}</td>
+      <td class="mono">${escapeHtml(displayValue(row.email, ""))}</td>
+      <td>${escapeHtml(displayValue(row.province, ""))}</td>
+      <td>${escapeHtml(displayValue(row.city, ""))}</td>
+      <td>${escapeHtml(displayValue(row.company_title || row.companyTitle, ""))}</td>
+      <td>${escapeHtml(displayValue(row.focus_fields || row.focusFields, ""))}</td>
+      <td>${escapeHtml(displayValue(row.current_status || row.currentStatus, ""))}</td>
+      <td>${escapeHtml(displayValue(row.directory_visibility || row.directoryVisibility, ""))}</td>
       <td class="mono">${escapeHtml(displayValue(row.updated_at || row.updatedAt, ""))}</td>
     </tr>
   `);

@@ -243,9 +243,54 @@ export async function updateMember(
   return member;
 }
 
+export async function createMember(
+  db: D1Database,
+  fields: MemberWriteFields,
+  createdAt: string,
+): Promise<Member> {
+  const id = crypto.randomUUID();
+  const normalized = await prepareMemberUpdateFields(db, id, fields);
+
+  await db
+    .prepare(
+      `INSERT INTO members (
+         id, spirit_name, cohort, real_name, phone, wechat, email, province, city,
+         company_title, focus_fields, current_status, self_intro, role,
+         directory_visibility, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      id,
+      normalized.spiritName,
+      normalized.cohort,
+      normalized.realName,
+      normalized.phone,
+      normalized.wechat,
+      normalized.email,
+      normalized.province,
+      normalized.city,
+      normalized.companyTitle,
+      normalized.focusFields,
+      normalized.currentStatus,
+      normalized.selfIntro,
+      normalized.role ?? "校友",
+      normalized.directoryVisibility ?? "internal",
+      createdAt,
+      createdAt,
+    )
+    .run();
+
+  const member = await getMemberById(db, id);
+  if (!member) {
+    throw new NotFoundError("成员创建后未找到记录");
+  }
+  return member;
+}
+
 export async function upsertSurveyResponse(
   db: D1Database,
-  memberId: string,
+  memberId: string | null,
   slug: string,
   fields: SurveyWriteFields,
   payload: JsonValue,
@@ -253,6 +298,53 @@ export async function upsertSurveyResponse(
 ): Promise<SurveyResponse> {
   const id = crypto.randomUUID();
   const payloadText = JSON.stringify(payload);
+
+  if (!memberId) {
+    await db
+      .prepare(
+        `INSERT INTO survey_responses (
+           id, campaign_slug, member_id,
+           will_attend, current_status, focus_fields, self_intro,
+           activities_joined, activity_other, memorable_activity, activity_value,
+           activity_improvements, future_activities, future_topics, co_creation_roles,
+           market_interest, market_description, market_types, followup_consent,
+           directory_visibility, message_to_csight, payload, created_at, updated_at
+         )
+         VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        id,
+        slug,
+        fields.willAttend,
+        fields.currentStatus,
+        fields.focusFields,
+        fields.selfIntro,
+        fields.activitiesJoined,
+        fields.activityOther,
+        fields.memorableActivity,
+        fields.activityValue,
+        fields.activityImprovements,
+        fields.futureActivities,
+        fields.futureTopics,
+        fields.coCreationRoles,
+        fields.marketInterest,
+        fields.marketDescription,
+        fields.marketTypes,
+        fields.followupConsent,
+        fields.directoryVisibility,
+        fields.messageToCsight,
+        payloadText,
+        updatedAt,
+        updatedAt,
+      )
+      .run();
+
+    const response = await getSurveyById(db, id);
+    if (!response) {
+      throw new NotFoundError("问卷保存后未找到记录");
+    }
+    return response;
+  }
 
   await db
     .prepare(
@@ -540,7 +632,7 @@ export async function listResponses(
          m.created_at AS m_created_at,
          m.updated_at AS m_updated_at
        FROM survey_responses r
-       JOIN members m ON m.id = r.member_id
+       LEFT JOIN members m ON m.id = r.member_id
        WHERE r.campaign_slug = ?
        ORDER BY r.updated_at DESC
        LIMIT ? OFFSET ?`,
@@ -687,6 +779,11 @@ async function getMemberById(db: D1Database, memberId: string): Promise<Member |
   return row ? mapMember(row) : null;
 }
 
+async function getSurveyById(db: D1Database, id: string): Promise<SurveyResponse | null> {
+  const row = await db.prepare("SELECT * FROM survey_responses WHERE id = ?").bind(id).first<SurveyResponseRow>();
+  return row ? mapSurvey(row) : null;
+}
+
 async function prepareMemberUpdateFields(
   db: D1Database,
   memberId: string,
@@ -725,25 +822,27 @@ async function countQuery(
 
 function mapJoinedSurvey(row: JoinedSurveyRow): SurveyResponseWithMember {
   return {
-    member: mapMember({
-      id: row.m_id,
-      spirit_name: row.m_spirit_name,
-      cohort: row.m_cohort,
-      real_name: row.m_real_name,
-      phone: row.m_phone,
-      wechat: row.m_wechat,
-      email: row.m_email,
-      province: row.m_province,
-      city: row.m_city,
-      company_title: row.m_company_title,
-      focus_fields: row.m_focus_fields,
-      current_status: row.m_current_status,
-      self_intro: row.m_self_intro,
-      role: row.m_role,
-      directory_visibility: row.m_directory_visibility,
-      created_at: row.m_created_at,
-      updated_at: row.m_updated_at,
-    }),
+    member: row.m_id
+      ? mapMember({
+          id: row.m_id,
+          spirit_name: row.m_spirit_name ?? "",
+          cohort: row.m_cohort,
+          real_name: row.m_real_name,
+          phone: row.m_phone ?? "",
+          wechat: row.m_wechat,
+          email: row.m_email,
+          province: row.m_province,
+          city: row.m_city,
+          company_title: row.m_company_title,
+          focus_fields: row.m_focus_fields,
+          current_status: row.m_current_status,
+          self_intro: row.m_self_intro,
+          role: row.m_role,
+          directory_visibility: row.m_directory_visibility,
+          created_at: row.m_created_at ?? "",
+          updated_at: row.m_updated_at ?? "",
+        })
+      : null,
     response: mapSurvey(row),
   };
 }
@@ -796,11 +895,11 @@ function clampLimit(value: number | undefined): number {
 }
 
 interface JoinedSurveyRow extends SurveyResponseRow {
-  m_id: string;
-  m_spirit_name: string;
+  m_id: string | null;
+  m_spirit_name: string | null;
   m_cohort: string | null;
   m_real_name: string | null;
-  m_phone: string;
+  m_phone: string | null;
   m_wechat: string | null;
   m_email: string | null;
   m_province: string | null;
@@ -811,6 +910,6 @@ interface JoinedSurveyRow extends SurveyResponseRow {
   m_self_intro: string | null;
   m_role: string | null;
   m_directory_visibility: string | null;
-  m_created_at: string;
-  m_updated_at: string;
+  m_created_at: string | null;
+  m_updated_at: string | null;
 }

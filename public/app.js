@@ -3,11 +3,53 @@ const VERIFY_TOKEN_KEY = "csight.verifyToken";
 const DRAFT_KEY = "csight.passionSurveyDraft";
 const CAMPAIGN_SLUG = "csight-passion-2026";
 
+const CITY_POSITIONS = {
+  "北京市": [73, 30],
+  "北京": [73, 30],
+  "上海市": [82, 61],
+  "上海": [82, 61],
+  "天津市": [76, 34],
+  "天津": [76, 34],
+  "重庆市": [57, 62],
+  "重庆": [57, 62],
+  "广州市": [68, 78],
+  "广州": [68, 78],
+  "深圳市": [70, 82],
+  "深圳": [70, 82],
+  "杭州市": [78, 63],
+  "杭州": [78, 63],
+  "南京市": [76, 57],
+  "南京": [76, 57],
+  "苏州市": [80, 59],
+  "苏州": [80, 59],
+  "武汉市": [65, 58],
+  "武汉": [65, 58],
+  "成都市": [52, 62],
+  "成都": [52, 62],
+  "西安市": [57, 47],
+  "西安": [57, 47],
+  "长沙市": [65, 66],
+  "长沙": [65, 66],
+  "厦门市": [75, 76],
+  "厦门": [75, 76],
+  "青岛市": [78, 43],
+  "青岛": [78, 43],
+  "郑州市": [64, 48],
+  "郑州": [64, 48],
+  "温州市": [80, 70],
+  "温州": [80, 70],
+  "台州市": [81, 67],
+  "台州": [81, 67],
+  "宁波市": [82, 65],
+  "宁波": [82, 65]
+};
+
 const state = {
   config: null,
   member: null,
   verifyToken: sessionStorage.getItem(VERIFY_TOKEN_KEY) || "",
   adminPassword: sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "",
+  lastSurveyAffiliation: "",
   adminLoaded: false
 };
 
@@ -309,7 +351,7 @@ function renderMember(member) {
   if (!member) {
     $("#memberNotice")?.classList.remove("hidden");
     $("#memberSummary")?.classList.add("hidden");
-    enableContactForm(false);
+    enableContactForm(true);
     return;
   }
 
@@ -347,7 +389,7 @@ function showVerifiedContactFallback(seed = {}) {
   state.member = null;
   const notice = $("#memberNotice");
   if (notice) {
-    notice.textContent = "身份已核验，但暂时无法读取后端旧资料。你可以先手动填写并提交；最终是否保存以后端返回为准。";
+    notice.textContent = "没有匹配到旧通讯录记录。你可以直接新增一条通讯录；如果只是来填问卷，也可以跳到问卷。";
     notice.className = "message warn";
   }
   $("#memberSummary")?.classList.add("hidden");
@@ -383,6 +425,42 @@ async function loadConfig() {
   } catch (error) {
     $("#homeSurveyStatus").textContent = "等待接口同步";
     setMessage($("#configMessage"), "warn", "暂时无法同步后端配置。你仍可阅读公开信；提交时会再次连接服务器。");
+  }
+}
+
+function cityPosition(city) {
+  const clean = String(city || "").trim();
+  if (CITY_POSITIONS[clean]) return CITY_POSITIONS[clean];
+  return CITY_POSITIONS[clean.replace(/市$/, "")] || null;
+}
+
+async function loadMemberMap() {
+  try {
+    const payload = await apiRequest("/api/member-map");
+    const data = normalizeObjectPayload(payload, ["data"]);
+    const cities = normalizeListPayload(data, ["cities"]);
+    const maxCount = Math.max(1, Number(data.maxCount || 1));
+    const points = $("#mapPoints");
+    const summary = $("#mapSummary");
+    const list = $("#mapTopCities");
+    if (!points || !summary || !list) return;
+
+    const positioned = cities
+      .map((item) => ({ ...item, position: cityPosition(item.city) }))
+      .filter((item) => item.position)
+      .slice(0, 24);
+
+    points.innerHTML = positioned.map((item) => {
+      const [x, y] = item.position;
+      const size = 7 + Math.round((Number(item.count) / maxCount) * 14);
+      return `<span class="city-dot" style="--x:${x}%;--y:${y}%;--dot-size:${size}px" title="${escapeHtml(item.city)} · ${escapeHtml(String(item.count))}"></span>`;
+    }).join("");
+
+    summary.textContent = `${data.totalMembers || 0} 位伙伴，已经点亮 ${data.litCities || cities.length} 座城市。`;
+    list.innerHTML = cities.slice(0, 5).map((item) => `<span>${escapeHtml(item.city)} ${escapeHtml(String(item.count))}</span>`).join("");
+  } catch {
+    const summary = $("#mapSummary");
+    if (summary) summary.textContent = "城市分布暂时无法同步。";
   }
 }
 
@@ -443,7 +521,13 @@ async function handleVerify(event) {
     setMessage(message, "ok", "核验成功。正在进入通讯录确认。");
     setTimeout(() => route("contact"), 420);
   } catch (error) {
-    setMessage(message, "error", `${error.message || "核验失败"}。你可以再检查一次，或提交人工恢复。`);
+    if (error.status === 404) {
+      showVerifiedContactFallback(data);
+      setMessage(message, "warn", "没有匹配到旧通讯录记录。你可以直接新增通讯录，或继续填写开放问卷。");
+      setTimeout(() => route("contact"), 520);
+    } else {
+      setMessage(message, "error", `${error.message || "核验失败"}。你可以再检查一次，或提交人工恢复。`);
+    }
   } finally {
     setBusy(button, false);
   }
@@ -453,25 +537,27 @@ async function submitContact(event) {
   event.preventDefault();
   const button = $("#contactSubmit");
   const message = $("#contactMsg");
-  if (!hasVerifiedIdentity()) {
-    setMessage(message, "error", "请先完成身份核验，再提交通讯录更新。");
-    route("verify");
-    return;
-  }
+  const isExistingMember = hasVerifiedIdentity();
   const data = {
-    ...getTokenPayload(),
+    ...(isExistingMember ? getTokenPayload() : {}),
     campaign_slug: CAMPAIGN_SLUG,
     member_id: state.member?.id,
     ...formToObject(event.currentTarget)
   };
 
-  setBusy(button, true, "保存中...");
+  setBusy(button, true, isExistingMember ? "保存中..." : "新增中...");
   clearMessage(message);
   try {
-    const payload = await apiRequest("/api/member/update", { body: data });
+    const payload = await apiRequest(isExistingMember ? "/api/member/update" : "/api/member/create", { body: data });
+    const token = payload.data?.token || payload.data?.verification_token || payload.token || payload.verification_token;
+    if (token) {
+      state.verifyToken = token;
+      sessionStorage.setItem(VERIFY_TOKEN_KEY, token);
+    }
     const member = normalizeObjectPayload(payload, ["member"]);
     if (member && Object.keys(member).length) renderMember(member);
-    setMessage(message, "ok", "通讯录更新已保存。可以继续填写年会问卷。");
+    setMessage(message, "ok", isExistingMember ? "通讯录更新已保存。可以继续填写年会问卷。" : "新通讯录成员已添加。可以继续填写年会问卷。");
+    loadMemberMap();
   } catch (error) {
     setMessage(message, "error", `${error.message || "保存失败"}。你的修改还没有被后端确认，请稍后再试。`);
   } finally {
@@ -482,11 +568,10 @@ async function submitContact(event) {
 async function confirmContact() {
   const form = $("#contactForm");
   const message = $("#contactMsg");
-  if (!form || !hasVerifiedIdentity()) {
-    route("verify");
+  if (!form) {
     return;
   }
-  await submitContact(new Event("submit", { cancelable: true, bubbles: false, currentTarget: form }));
+  await submitContact({ preventDefault() {}, currentTarget: form });
   setMessage(message, message.classList.contains("error") ? "error" : "ok", message.textContent || "已确认当前资料。");
 }
 
@@ -513,14 +598,10 @@ async function submitSurvey(event) {
   event.preventDefault();
   const button = $("#surveySubmit");
   const message = $("#surveyMsg");
-  if (!hasVerifiedIdentity()) {
-    setMessage(message, "error", "请先完成身份核验，再提交问卷。");
-    route("verify");
-    return;
-  }
   const survey = formToObject(event.currentTarget);
+  state.lastSurveyAffiliation = survey.csight_affiliation || "";
   const payload = {
-    ...getTokenPayload(),
+    ...(hasVerifiedIdentity() ? getTokenPayload() : {}),
     campaign_slug: CAMPAIGN_SLUG,
     member_id: state.member?.id,
     ...survey,
@@ -534,6 +615,7 @@ async function submitSurvey(event) {
     const member = normalizeObjectPayload(responsePayload, ["member"]);
     if (member && Object.keys(member).length) renderMember(member);
     localStorage.removeItem(DRAFT_KEY);
+    $("#doneContactBtn")?.classList.toggle("hidden", survey.csight_affiliation !== "yes");
     route("done");
   } catch (error) {
     setMessage(message, "error", `${error.message || "提交失败"}。问卷尚未保存到后端，请稍后再试。`);
@@ -825,6 +907,7 @@ function boot() {
   restoreDraft();
   loadConfig();
   loadMemberFromToken();
+  loadMemberMap();
 
   const startHash = window.location.hash.replace("#", "");
   route(startHash && document.getElementById(startHash) ? startHash : "home", { silent: true });

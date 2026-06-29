@@ -84,7 +84,7 @@ export interface MemberWriteFields {
 export interface SurveyResponseRow {
   id: string;
   campaign_slug: string;
-  member_id: string;
+  member_id: string | null;
   will_attend: string | null;
   current_status: string | null;
   focus_fields: string | null;
@@ -111,7 +111,7 @@ export interface SurveyResponseRow {
 export interface SurveyResponse {
   id: string;
   campaignSlug: string;
-  memberId: string;
+  memberId: string | null;
   willAttend: string | null;
   currentStatus: string | null;
   focusFields: string | null;
@@ -136,7 +136,7 @@ export interface SurveyResponse {
 }
 
 export interface SurveyResponseWithMember {
-  member: Member;
+  member: Member | null;
   response: SurveyResponse;
 }
 

@@ -2,6 +2,7 @@ import { CsvValidationError, parseMembersCsv, stringifyCsv, type CsvHeader } fro
 import {
   DuplicatePhoneError,
   campaignSlug,
+  createMember,
   createRecoveryRequest,
   createVerificationToken,
   findVerifiedMember,
@@ -108,8 +109,16 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return handleMemberUpdate(request, env);
   }
 
+  if (request.method === "POST" && path === "/api/member/create") {
+    return handleMemberCreate(request, env);
+  }
+
   if (request.method === "POST" && path === "/api/survey") {
     return handleSurvey(request, env, slug);
+  }
+
+  if (request.method === "GET" && path === "/api/member-map") {
+    return handleMemberMap(env);
   }
 
   if (request.method === "POST" && path === "/api/recovery") {
@@ -187,20 +196,42 @@ async function handleMemberUpdate(request: Request, env: Env): Promise<Response>
   return jsonOk({ member: updated });
 }
 
+async function handleMemberCreate(request: Request, env: Env): Promise<Response> {
+  const body = await readJsonObject(request);
+  const fields = completeMemberFields(extractMemberFields(body));
+
+  validateMemberUpdate(fields);
+  const member = await createMember(env.DB, fields, nowIso());
+  const token = await createVerificationToken(env.DB, member.id, nowIso());
+
+  return jsonOk({
+    member,
+    token: token.token,
+    verificationToken: token.token,
+    verification_token: token.token,
+    expiresAt: token.expiresAt,
+  }, 201);
+}
+
 async function handleSurvey(request: Request, env: Env, slug: string): Promise<Response> {
   const body = await readJsonObject(request);
   const token = getTokenFromBody(body);
-  const member = await requireVerifiedMember(env, token);
   const surveyFields = extractSurveyFields(body);
-  const memberFields = mergeSurveyBackToMember(extractMemberFields(body), surveyFields);
+  let member: Member | null = null;
+  let updatedMember: Member | null = null;
 
-  validateMemberUpdate(memberFields);
-  const updatedMember = Object.keys(memberFields).length > 0
-    ? await updateMember(env.DB, member.id, memberFields, nowIso())
-    : member;
+  if (token) {
+    member = await requireVerifiedMember(env, token);
+    const memberFields = mergeSurveyBackToMember(extractMemberFields(body), surveyFields);
+    validateMemberUpdate(memberFields);
+    updatedMember = Object.keys(memberFields).length > 0
+      ? await updateMember(env.DB, member.id, memberFields, nowIso())
+      : member;
+  }
+
   const response = await upsertSurveyResponse(
     env.DB,
-    member.id,
+    member?.id ?? null,
     slug,
     surveyFields,
     payloadWithoutToken(body),
@@ -208,6 +239,26 @@ async function handleSurvey(request: Request, env: Env, slug: string): Promise<R
   );
 
   return jsonOk({ member: updatedMember, response });
+}
+
+async function handleMemberMap(env: Env): Promise<Response> {
+  const members = await listMembers(env.DB, { limit: 10000 });
+  const cities = new Map<string, { city: string; province: string | null; count: number }>();
+  for (const member of members) {
+    const city = normalizeText(member.city);
+    if (!city) continue;
+    const key = `${member.province ?? ""}|${city}`;
+    const current = cities.get(key) ?? { city, province: member.province, count: 0 };
+    current.count += 1;
+    cities.set(key, current);
+  }
+  const items = [...cities.values()].sort((a, b) => b.count - a.count || a.city.localeCompare(b.city, "zh-CN"));
+  return jsonOk({
+    totalMembers: members.length,
+    litCities: items.length,
+    maxCount: Math.max(0, ...items.map((item) => item.count)),
+    cities: items,
+  });
 }
 
 async function handleRecovery(request: Request, env: Env): Promise<Response> {
@@ -486,6 +537,25 @@ function mergeSurveyBackToMember(
   };
 }
 
+function completeMemberFields(fields: Partial<MemberWriteFields>): MemberWriteFields {
+  return {
+    spiritName: normalizeText(fields.spiritName),
+    cohort: fields.cohort ?? null,
+    realName: fields.realName ?? null,
+    phone: normalizePhone(fields.phone),
+    wechat: fields.wechat ?? null,
+    email: fields.email ?? null,
+    province: fields.province ?? null,
+    city: fields.city ?? null,
+    companyTitle: fields.companyTitle ?? null,
+    focusFields: fields.focusFields ?? null,
+    currentStatus: fields.currentStatus ?? null,
+    selfIntro: fields.selfIntro ?? null,
+    role: fields.role ?? "校友",
+    directoryVisibility: fields.directoryVisibility ?? "internal",
+  };
+}
+
 function validateMemberUpdate(fields: Partial<MemberWriteFields>): void {
   if ("spiritName" in fields && !normalizeText(fields.spiritName)) {
     throw new RequestError(400, "invalid_member", "精灵名不能为空。");
@@ -636,11 +706,11 @@ function exportResponsesCsv(items: SurveyResponseWithMember[]): string {
     { key: "updatedAt", label: "更新时间" },
   ];
   const rows = items.map(({ member, response }) => ({
-    spiritName: member.spiritName,
-    cohort: member.cohort,
-    realName: member.realName,
-    phone: member.phone,
-    city: member.city,
+    spiritName: member?.spiritName ?? payloadText(response.payload, "spirit_name", "name", "real_name"),
+    cohort: member?.cohort ?? payloadText(response.payload, "cohort"),
+    realName: member?.realName ?? payloadText(response.payload, "real_name", "name"),
+    phone: member?.phone ?? payloadText(response.payload, "phone"),
+    city: member?.city ?? payloadText(response.payload, "city"),
     willAttend: response.willAttend,
     currentStatus: response.currentStatus,
     focusFields: response.focusFields,
@@ -661,6 +731,19 @@ function exportResponsesCsv(items: SurveyResponseWithMember[]): string {
     updatedAt: response.updatedAt,
   }));
   return stringifyCsv(headers, rows);
+}
+
+function payloadText(payload: JsonValue, ...keys: string[]): string | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
 }
 
 function assignStringField<K extends keyof MemberWriteFields>(

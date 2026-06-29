@@ -86,21 +86,26 @@
               <div class="card cta-card">
                 <div class="kicker">2026 annual gathering</div>
                 <h2>今年 7.25，回来见一面</h2>
-                <p class="mini-copy">先核验身份，再更新通讯录。完整问卷约 5 分钟，帮助秘书处更好地设计年会和未来活动。</p>
+                <p class="mini-copy">问卷开放填写；如果你是创见校友或组织伙伴，还可以顺手更新通讯录。</p>
                 <dl class="event-list">
                   <div><dt>时间</dt><dd>2026年7月25日 12:00 签到，13:00 开始</dd></div>
                   <div><dt>地点</dt><dd>上海市徐汇区田林路130号20号楼</dd></div>
                   <div><dt>主题</dt><dd>Passion · 从热爱出发</dd></div>
                 </dl>
                 <div class="actions">
-                  <button class="btn" type="button" data-route="verify">开始更新通讯录</button>
-                  <button class="btn secondary" type="button" data-route="survey">直接看问卷</button>
+                  <button class="btn" type="button" data-route="survey">先填年会问卷</button>
+                  <button class="btn secondary" type="button" data-route="contact">更新通讯录</button>
                 </div>
               </div>
 
-              <div class="star-map" aria-label="创见星图装饰">
-                <div class="map-title">星图没有熄灭，只是在等新的坐标。</div>
-                <div class="map-note">你的城市、近况、热爱和可连接方向，会帮助老朋友重新找到你。</div>
+              <div class="star-map city-map" aria-label="创见校友城市点亮地图">
+                <div>
+                  <div class="kicker">City lights</div>
+                  <div class="map-title">创见的坐标，正在全国亮起。</div>
+                  <div id="mapSummary" class="map-note">正在读取通讯录城市分布。</div>
+                </div>
+                <div id="mapPoints" class="map-points" aria-hidden="true"></div>
+                <div id="mapTopCities" class="map-city-list"></div>
               </div>
 
               <div class="card pulse-card">
@@ -215,7 +220,7 @@
             <div class="step"><b>04</b>完成</div>
           </div>
 
-          <div id="memberNotice" class="message warn">请先完成身份核验。核验成功后，这里会从接口读取你的当前资料。</div>
+          <div id="memberNotice" class="message warn">如果你在旧通讯录里，可以先身份核验带出资料；如果找不到，也可以在这里直接新增或更新通讯录。</div>
 
           <div id="memberSummary" class="identity-card hidden">
             <div id="memberAvatar" class="avatar">见</div>
@@ -303,7 +308,7 @@
             <div>
               <div class="kicker">Step 03 · Passion survey</div>
               <h2>年会问卷：更新近况，也一起设计未来一年</h2>
-              <p>问题按年会问卷信息整理。提交需要先完成核验，草稿只保存在本机浏览器。</p>
+              <p>问卷开放填写。只有你选择自己是创见校友或组织伙伴时，才需要继续维护通讯录。</p>
             </div>
             <span class="status-pill open">问卷开放</span>
           </div>
@@ -318,6 +323,16 @@
           <div id="surveyPrefillMsg" class="message ok hidden" aria-live="polite"></div>
 
           <form id="surveyForm" class="card">
+            <div class="question first">
+              <div class="q-label">开始 · 身份分流</div>
+              <h3>你是创见校友或参与过创见组织的伙伴吗？</h3>
+              <p class="mini-copy">不是也欢迎填写年会问卷；只有选择“是”时，后续才会引导你更新通讯录。</p>
+              <div class="options">
+                <label class="option"><input type="radio" name="csight_affiliation" value="yes" required> 是，我是创见校友 / 组织伙伴</label>
+                <label class="option"><input type="radio" name="csight_affiliation" value="no"> 不是，但我想参与或提供反馈</label>
+              </div>
+            </div>
+
             <div class="question first">
               <div class="q-label">年会信息 · 单选</div>
               <h3>今年 7.25 的 2026 Passion 年会，你是否参加？</h3>
@@ -532,7 +547,7 @@
             <p class="sub">这份问卷不仅帮助我们更新校友信息，也帮助我们一起设计未来一年的创见。期待在线下工作坊、创见101活动，以及今年的创见12周年 Passion 年会上与你再次相见。</p>
             <div class="actions center">
               <button class="btn" type="button" data-route="home">回到公开信</button>
-              <button class="btn secondary" type="button" data-route="contact">修改通讯录</button>
+              <button id="doneContactBtn" class="btn secondary" type="button" data-route="contact">更新通讯录</button>
               <button class="btn ghost" type="button" data-route="survey">修改问卷</button>
             </div>
           </div>

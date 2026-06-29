@@ -1,10 +1,12 @@
 import { CsvValidationError, parseMembersCsv, stringifyCsv, type CsvHeader } from "./csv";
 import {
   DuplicatePhoneError,
+  NotFoundError,
   campaignSlug,
   createMember,
   createRecoveryRequest,
   createVerificationToken,
+  deleteSurveyResponse,
   findMemberCandidates,
   findVerifiedMember,
   getAdminStats,
@@ -71,6 +73,9 @@ export default {
       }
       if (error instanceof DuplicatePhoneError) {
         return jsonError(409, "duplicate_phone", error.message);
+      }
+      if (error instanceof NotFoundError) {
+        return jsonError(404, "not_found", error.message);
       }
 
       console.error(error);
@@ -333,6 +338,16 @@ async function handleAdmin(
       offset: numberParam(url, "offset"),
     });
     return jsonOk({ items, count: items.length });
+  }
+
+  if (request.method === "POST" && path === "/api/admin/responses/delete") {
+    const body = await readJsonObject(request);
+    const id = normalizeText(body.id ?? body.response_id ?? body.responseId);
+    if (!id) {
+      throw new RequestError(400, "missing_response_id", "缺少要删除的问卷 ID。");
+    }
+    await deleteSurveyResponse(env.DB, id, slug);
+    return jsonOk({ deleted: true, id });
   }
 
   if (request.method === "GET" && path === "/api/admin/recovery") {

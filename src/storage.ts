@@ -681,6 +681,21 @@ export async function listResponses(
   return (result.results ?? []).map(mapJoinedSurvey);
 }
 
+export async function deleteSurveyResponse(
+  db: D1Database,
+  id: string,
+  slug: string,
+): Promise<void> {
+  const result = await db
+    .prepare("DELETE FROM survey_responses WHERE id = ? AND campaign_slug = ?")
+    .bind(id, slug)
+    .run();
+
+  if (!result.meta.changes) {
+    throw new NotFoundError("问卷记录不存在或已被删除");
+  }
+}
+
 export async function listRecoveryRequests(
   db: D1Database,
   options: { status?: string; limit?: number; offset?: number },

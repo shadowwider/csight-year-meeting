@@ -12,7 +12,10 @@ const state = {
   surveyContact: null,
   mapChart: null,
   adminLoaded: false,
-  confirmNewMember: false
+  confirmNewMember: false,
+  pendingSurveySubmit: false,
+  pendingSurveyData: null,
+  resumingSurveySubmit: false
 };
 
 const CITY_COORDS = {
@@ -185,6 +188,10 @@ function setFormValueIfEmpty(form, name, value, options = {}) {
 
 function surveyFormDataFromMember(member) {
   return {
+    survey_name: member.real_name || member.realName || member.spirit_name || member.spiritName || "",
+    spirit_name: member.spirit_name || member.spiritName || "",
+    phone: member.phone || "",
+    wechat: member.wechat || "",
     current_status: member.current_status || member.currentStatus || "",
     focus_fields: member.focus_fields || member.focusFields || "",
     self_intro: member.self_intro || member.selfIntro || "",
@@ -230,8 +237,19 @@ function prefillSurvey(data, message, options = {}) {
 function prefillSurveyFromMember(member) {
   prefillSurvey(
     surveyFormDataFromMember(member),
-    "已从通讯录带入近况、关注领域和通讯录授权。你可以直接提交，也可以修改；问卷提交后会同步更新通讯录中的这些字段。"
+    "已从通讯录带入姓名、联系方式、近况和通讯录授权。你可以直接提交，也可以修改；问卷提交后会同步更新通讯录中的这些字段。"
   );
+}
+
+function syncSurveyIdentityFromMember(member) {
+  const form = $("#surveyForm");
+  if (!form || !member) return;
+  fillForm(form, {
+    survey_name: member.real_name || member.realName || member.spirit_name || member.spiritName || "",
+    spirit_name: member.spirit_name || member.spiritName || "",
+    phone: member.phone || "",
+    wechat: member.wechat || ""
+  });
 }
 
 function prefillSurveyFromResponse(response) {
@@ -463,7 +481,13 @@ function selectMemberMatch(match) {
   }
   renderMember(match.member);
   clearMemberMatches();
-  setMessage($("#contactMsg"), "ok", "已选择这条通讯录记录。请确认并保存你的更新。");
+  setMessage(
+    $("#contactMsg"),
+    "ok",
+    state.pendingSurveySubmit
+      ? "已选择这条通讯录记录。请确认并保存；保存后系统会回到问卷并自动提交。"
+      : "已选择这条通讯录记录。请确认并保存你的更新。"
+  );
 }
 
 function maskPhone(phone) {
@@ -757,7 +781,12 @@ async function submitContact(event) {
     if (member && Object.keys(member).length) renderMember(member);
     state.confirmNewMember = false;
     clearMemberMatches();
-    setMessage(message, "ok", isExistingMember ? "通讯录更新已保存。可以继续填写年会问卷。" : "新通讯录成员已添加。可以继续填写年会问卷。");
+    if (state.pendingSurveySubmit) {
+      setMessage(message, "ok", "通讯录已保存。正在回到问卷并提交。");
+      await completePendingSurveyAfterContact();
+    } else {
+      setMessage(message, "ok", isExistingMember ? "通讯录更新已保存。可以继续填写年会问卷。" : "新通讯录成员已添加。可以继续填写年会问卷。");
+    }
     loadMemberMap();
   } catch (error) {
     setMessage(message, "error", `${error.message || "保存失败"}。你的修改还没有被后端确认，请稍后再试。`);
@@ -774,6 +803,31 @@ async function confirmContact() {
   }
   await submitContact({ preventDefault() {}, currentTarget: form });
   setMessage(message, message.classList.contains("error") ? "error" : "ok", message.textContent || "已确认当前资料。");
+}
+
+async function completePendingSurveyAfterContact() {
+  const memberIdentity = state.member ? {
+    survey_name: state.member.real_name || state.member.realName || state.member.spirit_name || state.member.spiritName || "",
+    spirit_name: state.member.spirit_name || state.member.spiritName || "",
+    phone: state.member.phone || "",
+    wechat: state.member.wechat || ""
+  } : {};
+  const survey = {
+    ...(state.pendingSurveyData || {}),
+    ...formToObject($("#surveyForm")),
+    ...memberIdentity
+  };
+  state.pendingSurveySubmit = false;
+  state.pendingSurveyData = null;
+  try {
+    state.resumingSurveySubmit = true;
+    fillForm($("#surveyForm"), survey);
+    syncSurveyIdentityFromMember(state.member);
+    route("survey");
+    await submitSurvey({ preventDefault() {}, currentTarget: $("#surveyForm") });
+  } finally {
+    state.resumingSurveySubmit = false;
+  }
 }
 
 function restoreDraft() {
@@ -797,7 +851,7 @@ function saveDraft() {
 
 function prefillContactFromSurvey(survey) {
   fillForm($("#contactForm"), {
-    spirit_name: survey.spirit_name || "",
+    spirit_name: survey.spirit_name || survey.survey_name || "",
     real_name: survey.real_name || survey.survey_name || "",
     phone: survey.phone || "",
     wechat: survey.wechat || "",
@@ -829,6 +883,44 @@ async function submitSurvey(event) {
   const survey = formToObject(event.currentTarget);
   state.lastSurveyAffiliation = survey.csight_affiliation || "";
   state.surveyContact = survey;
+
+  if (survey.csight_affiliation === "yes" && !hasVerifiedIdentity() && !state.resumingSurveySubmit) {
+    setBusy(button, true, "先查通讯录...");
+    clearMessage(message);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(survey));
+    state.pendingSurveySubmit = true;
+    state.pendingSurveyData = survey;
+    try {
+      const matches = await findMemberMatches(survey);
+      renderMember(null);
+      prefillContactFromSurvey(survey);
+      route("contact");
+      if (matches.length) {
+        renderMemberMatches(matches);
+        setMessage(
+          $("#contactMsg"),
+          "warn",
+          `问卷内容已暂存。系统找到 ${matches.length} 条可能匹配的通讯录记录，请先选择并更新；保存后会自动回到问卷并提交。`
+        );
+      } else {
+        state.confirmNewMember = true;
+        clearMemberMatches();
+        setMessage(
+          $("#contactMsg"),
+          "warn",
+          "问卷内容已暂存。没有命中旧通讯录，请先保存一条通讯录记录；保存后会自动回到问卷并提交。"
+        );
+      }
+    } catch (error) {
+      state.pendingSurveySubmit = false;
+      state.pendingSurveyData = null;
+      setMessage(message, "error", `${error.message || "通讯录查询失败"}。为了避免重复资料，问卷暂未提交。`);
+    } finally {
+      setBusy(button, false);
+    }
+    return;
+  }
+
   const payload = {
     ...(hasVerifiedIdentity() ? getTokenPayload() : {}),
     campaign_slug: CAMPAIGN_SLUG,
@@ -845,15 +937,8 @@ async function submitSurvey(event) {
     if (member && Object.keys(member).length) renderMember(member);
     localStorage.removeItem(DRAFT_KEY);
     if (survey.csight_affiliation === "yes") {
-      if (!member?.id && !state.member?.id) {
-        renderMember(null);
-        prefillContactFromSurvey(survey);
-      }
-      route("contact");
-      const matches = await loadMemberMatchesFromSurvey(survey);
-      if (!matches.length) {
-        setMessage($("#contactMsg"), "warn", "问卷已保存。没有找到明显匹配的旧通讯录记录，你可以直接新增；也可以暂不更新。");
-      }
+      $("#doneContactBtn")?.classList.remove("hidden");
+      route("done");
     } else {
       $("#doneContactBtn")?.classList.add("hidden");
       route("done");
@@ -964,7 +1049,9 @@ function renderMembers(payload) {
 function renderResponses(payload) {
   const rows = normalizeListPayload(payload, ["responses", "items", "rows"]);
   $("#adminResponsesSummary").textContent = rows.length ? `${rows.length} 条问卷回应` : "接口未返回问卷回应";
-  renderTable("#responsesBody", rows, 7, (row) => `
+  renderTable("#responsesBody", rows, 8, (row) => {
+    const responseId = row.response?.id || row.id;
+    return `
     <tr>
       <td>${escapeHtml(displayValue(responseName(row), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "will_attend", "willAttend"), ""))}</td>
@@ -973,8 +1060,23 @@ function renderResponses(payload) {
       <td>${escapeHtml(displayValue(responseValue(row, "market_interest", "marketInterest"), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "message_to_csight", "messageToCsight"), ""))}</td>
       <td class="mono">${escapeHtml(displayValue(responseValue(row, "created_at", "createdAt"), ""))}</td>
+      <td><button class="plain-link danger-link" type="button" data-delete-response="${escapeHtml(responseId || "")}">删除</button></td>
     </tr>
-  `);
+  `;
+  });
+}
+
+async function deleteResponse(id) {
+  if (!id) return;
+  if (!window.confirm("确定删除这条问卷吗？这个操作不可恢复。")) return;
+  setMessage($("#adminMsg"), "warn", "正在删除问卷...");
+  try {
+    await apiRequest("/api/admin/responses/delete", { admin: true, body: { id } });
+    setMessage($("#adminMsg"), "ok", "问卷已删除。");
+    await loadAdminData();
+  } catch (error) {
+    setMessage($("#adminMsg"), "error", `${error.message || "删除失败"}。`);
+  }
 }
 
 function responseValue(row, snakeKey, camelKey) {
@@ -1158,6 +1260,11 @@ function bindEvents() {
   $("#csvExport")?.addEventListener("click", exportCsv);
   $("#csvCopy")?.addEventListener("click", copyCsv);
   $("#csvDownload")?.addEventListener("click", downloadCsv);
+  $("#responsesBody")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-delete-response]");
+    if (!button) return;
+    deleteResponse(button.dataset.deleteResponse);
+  });
 }
 
 function boot() {

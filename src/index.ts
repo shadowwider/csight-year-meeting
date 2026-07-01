@@ -217,7 +217,7 @@ async function handleMemberCreate(request: Request, env: Env): Promise<Response>
   const body = await readJsonObject(request);
   const fields = completeMemberFields(extractMemberFields(body));
 
-  validateMemberUpdate(fields);
+  validateMemberUpdate(fields, { requireCohort: true });
   const member = await createMember(env.DB, fields, nowIso());
   const token = await createVerificationToken(env.DB, member.id, nowIso());
 
@@ -605,9 +605,15 @@ function completeMemberFields(fields: Partial<MemberWriteFields>): MemberWriteFi
   };
 }
 
-function validateMemberUpdate(fields: Partial<MemberWriteFields>): void {
+function validateMemberUpdate(
+  fields: Partial<MemberWriteFields>,
+  options: { requireCohort?: boolean } = {},
+): void {
   if ("spiritName" in fields && !normalizeText(fields.spiritName)) {
     throw new RequestError(400, "invalid_member", "精灵名不能为空。");
+  }
+  if ((options.requireCohort || "cohort" in fields) && !normalizeText(fields.cohort)) {
+    throw new RequestError(400, "invalid_member", "请选择创见期数；如果不确定，可以选择“不记得”。");
   }
   if ("phone" in fields && !normalizePhone(fields.phone)) {
     throw new RequestError(400, "invalid_member", "手机号不能为空。");

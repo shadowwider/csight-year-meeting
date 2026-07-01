@@ -1164,6 +1164,18 @@ textarea:focus {
   max-width: 100%;
 }
 
+.table-tools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.table-tools .btn {
+  min-height: 44px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1252,7 +1264,8 @@ tr:hover td {
   .data-grid,
   .options,
   .stats,
-  .task-list {
+  .task-list,
+  .table-tools {
     grid-template-columns: 1fr;
   }
 

@@ -15,7 +15,9 @@ const state = {
   confirmNewMember: false,
   pendingSurveySubmit: false,
   pendingSurveyData: null,
-  resumingSurveySubmit: false
+  resumingSurveySubmit: false,
+  adminMembersRows: [],
+  adminResponsesRows: []
 };
 
 const CITY_COORDS = {
@@ -377,6 +379,7 @@ function renderMember(member) {
 
   fillForm($("#contactForm"), {
     spirit_name: spiritName,
+    cohort: member.cohort || "",
     real_name: realName,
     phone: member.phone || "",
     wechat: member.wechat || "",
@@ -857,6 +860,7 @@ function prefillContactFromSurvey(survey) {
   fillForm($("#contactForm"), {
     spirit_name: survey.spirit_name || survey.survey_name || "",
     real_name: survey.real_name || survey.survey_name || "",
+    cohort: survey.cohort || "",
     phone: survey.phone || "",
     wechat: survey.wechat || "",
     current_status: survey.current_status || "",
@@ -1029,9 +1033,20 @@ function renderStats(payload) {
 }
 
 function renderMembers(payload) {
-  const rows = normalizeListPayload(payload, ["members", "items", "rows"]);
-  $("#adminMembersSummary").textContent = rows.length ? `${rows.length} 条成员记录` : "接口未返回成员记录";
-  renderTable("#membersBody", rows, 13, (row) => `
+  state.adminMembersRows = normalizeListPayload(payload, ["members", "items", "rows"]);
+  renderMembersTable();
+}
+
+function renderMembersTable() {
+  const rows = sortMembers(filterRows(state.adminMembersRows, $("#memberSearch")?.value), $("#memberSort")?.value);
+  $("#adminMembersSummary").textContent = state.adminMembersRows.length
+    ? `${rows.length} / ${state.adminMembersRows.length} 条成员记录`
+    : "接口未返回成员记录";
+  renderTable("#membersBody", rows, 13, renderMemberRow);
+}
+
+function renderMemberRow(row) {
+  return `
     <tr>
       <td>${escapeHtml(displayValue(row.cohort, ""))}</td>
       <td>${escapeHtml(displayValue(row.spirit_name || row.spiritName, ""))}</td>
@@ -1047,15 +1062,25 @@ function renderMembers(payload) {
       <td>${escapeHtml(displayValue(row.directory_visibility || row.directoryVisibility, ""))}</td>
       <td class="mono">${escapeHtml(displayValue(row.updated_at || row.updatedAt, ""))}</td>
     </tr>
-  `);
+  `;
 }
 
 function renderResponses(payload) {
-  const rows = normalizeListPayload(payload, ["responses", "items", "rows"]);
-  $("#adminResponsesSummary").textContent = rows.length ? `${rows.length} 条问卷回应` : "接口未返回问卷回应";
-  renderTable("#responsesBody", rows, 8, (row) => {
-    const responseId = row.response?.id || row.id;
-    return `
+  state.adminResponsesRows = normalizeListPayload(payload, ["responses", "items", "rows"]);
+  renderResponsesTable();
+}
+
+function renderResponsesTable() {
+  const rows = sortResponses(filterRows(state.adminResponsesRows, $("#responseSearch")?.value), $("#responseSort")?.value);
+  $("#adminResponsesSummary").textContent = state.adminResponsesRows.length
+    ? `${rows.length} / ${state.adminResponsesRows.length} 条问卷回应`
+    : "接口未返回问卷回应";
+  renderTable("#responsesBody", rows, 8, renderResponseRow);
+}
+
+function renderResponseRow(row) {
+  const responseId = row.response?.id || row.id;
+  return `
     <tr>
       <td>${escapeHtml(displayValue(responseName(row), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "will_attend", "willAttend"), ""))}</td>
@@ -1067,7 +1092,59 @@ function renderResponses(payload) {
       <td><button class="plain-link danger-link" type="button" data-delete-response="${escapeHtml(responseId || "")}">删除</button></td>
     </tr>
   `;
+}
+
+function filterRows(rows, keyword) {
+  const query = normalizeSearchText(keyword);
+  if (!query) return [...rows];
+  return rows.filter((row) => normalizeSearchText(rowSearchText(row)).includes(query));
+}
+
+function rowSearchText(value) {
+  if (value == null) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return value.map(rowSearchText).join(" ");
+  if (typeof value === "object") return Object.values(value).map(rowSearchText).join(" ");
+  return "";
+}
+
+function normalizeSearchText(value) {
+  return String(value || "").trim().replace(/\s+/g, "").toLowerCase();
+}
+
+function sortMembers(rows, sortKey = "updated_desc") {
+  return [...rows].sort((a, b) => {
+    if (sortKey === "cohort_asc") return cohortRank(a.cohort) - cohortRank(b.cohort) || textCompare(memberName(a), memberName(b));
+    if (sortKey === "name_asc") return textCompare(memberName(a), memberName(b));
+    if (sortKey === "city_asc") return textCompare(a.city, b.city) || textCompare(memberName(a), memberName(b));
+    return textCompare(b.updated_at || b.updatedAt, a.updated_at || a.updatedAt);
   });
+}
+
+function sortResponses(rows, sortKey = "created_desc") {
+  return [...rows].sort((a, b) => {
+    if (sortKey === "created_asc") return textCompare(responseValue(a, "created_at", "createdAt"), responseValue(b, "created_at", "createdAt"));
+    if (sortKey === "name_asc") return textCompare(responseName(a), responseName(b));
+    if (sortKey === "attend_asc") return textCompare(responseValue(a, "will_attend", "willAttend"), responseValue(b, "will_attend", "willAttend"));
+    return textCompare(responseValue(b, "created_at", "createdAt"), responseValue(a, "created_at", "createdAt"));
+  });
+}
+
+function memberName(row) {
+  return row.real_name || row.realName || row.spirit_name || row.spiritName || "";
+}
+
+function cohortRank(value) {
+  const text = String(value || "");
+  const digit = text.match(/\d+/)?.[0];
+  if (digit) return Number(digit);
+  if (text.includes("不记得")) return 90;
+  if (!text) return 99;
+  return 80;
+}
+
+function textCompare(a, b) {
+  return String(a || "").localeCompare(String(b || ""), "zh-CN", { numeric: true, sensitivity: "base" });
 }
 
 async function deleteResponse(id) {
@@ -1081,6 +1158,22 @@ async function deleteResponse(id) {
   } catch (error) {
     setMessage($("#adminMsg"), "error", `${error.message || "删除失败"}。`);
   }
+}
+
+function clearMemberFilters() {
+  const search = $("#memberSearch");
+  const sort = $("#memberSort");
+  if (search) search.value = "";
+  if (sort) sort.value = "updated_desc";
+  renderMembersTable();
+}
+
+function clearResponseFilters() {
+  const search = $("#responseSearch");
+  const sort = $("#responseSort");
+  if (search) search.value = "";
+  if (sort) sort.value = "created_desc";
+  renderResponsesTable();
 }
 
 function responseValue(row, snakeKey, camelKey) {
@@ -1264,6 +1357,24 @@ function bindEvents() {
   $("#csvExport")?.addEventListener("click", exportCsv);
   $("#csvCopy")?.addEventListener("click", copyCsv);
   $("#csvDownload")?.addEventListener("click", downloadCsv);
+  $("#memberSearchBtn")?.addEventListener("click", renderMembersTable);
+  $("#memberClearBtn")?.addEventListener("click", clearMemberFilters);
+  $("#memberSort")?.addEventListener("change", renderMembersTable);
+  $("#memberSearch")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      renderMembersTable();
+    }
+  });
+  $("#responseSearchBtn")?.addEventListener("click", renderResponsesTable);
+  $("#responseClearBtn")?.addEventListener("click", clearResponseFilters);
+  $("#responseSort")?.addEventListener("change", renderResponsesTable);
+  $("#responseSearch")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      renderResponsesTable();
+    }
+  });
   $("#responsesBody")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-delete-response]");
     if (!button) return;

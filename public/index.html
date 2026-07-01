@@ -254,6 +254,25 @@
                 <input id="contactRealName" name="real_name" autocomplete="name">
               </div>
               <div class="field">
+                <label for="contactCohort">创见期数</label>
+                <select id="contactCohort" name="cohort" required>
+                  <option value="">请选择</option>
+                  <option>第1期</option>
+                  <option>第2期</option>
+                  <option>第3期</option>
+                  <option>第4期</option>
+                  <option>第5期</option>
+                  <option>第6期</option>
+                  <option>第7期</option>
+                  <option>第8期</option>
+                  <option>第9期</option>
+                  <option>第10期</option>
+                  <option>第11期</option>
+                  <option>第12期</option>
+                  <option>不记得</option>
+                </select>
+              </div>
+              <div class="field">
                 <label for="contactPhone">手机号</label>
                 <input id="contactPhone" name="phone" class="mono" inputmode="tel" autocomplete="tel">
               </div>
@@ -753,6 +772,23 @@
                     <p>展示通讯录核心字段，完整导出请使用 CSV 面板。</p>
                   </div>
                 </div>
+                <div class="table-tools">
+                  <div class="field">
+                    <label for="memberSearch">搜索成员</label>
+                    <input id="memberSearch" placeholder="姓名、精灵名、手机号、城市、公司">
+                  </div>
+                  <div class="field">
+                    <label for="memberSort">排序</label>
+                    <select id="memberSort">
+                      <option value="updated_desc">最近更新</option>
+                      <option value="cohort_asc">期数从早到晚</option>
+                      <option value="name_asc">姓名 A-Z</option>
+                      <option value="city_asc">城市 A-Z</option>
+                    </select>
+                  </div>
+                  <button id="memberSearchBtn" class="btn secondary" type="button">搜索</button>
+                  <button id="memberClearBtn" class="btn ghost" type="button">清空</button>
+                </div>
                 <div class="table">
                   <table>
                     <thead>
@@ -786,6 +822,23 @@
                     <h2>问卷结果</h2>
                     <p>包含年会参加意向、活动反馈、创见集市意向等。</p>
                   </div>
+                </div>
+                <div class="table-tools">
+                  <div class="field">
+                    <label for="responseSearch">搜索问卷</label>
+                    <input id="responseSearch" placeholder="姓名、参加意向、状态、留言、集市">
+                  </div>
+                  <div class="field">
+                    <label for="responseSort">排序</label>
+                    <select id="responseSort">
+                      <option value="created_desc">最近提交</option>
+                      <option value="created_asc">最早提交</option>
+                      <option value="name_asc">姓名 A-Z</option>
+                      <option value="attend_asc">参加意向</option>
+                    </select>
+                  </div>
+                  <button id="responseSearchBtn" class="btn secondary" type="button">搜索</button>
+                  <button id="responseClearBtn" class="btn ghost" type="button">清空</button>
                 </div>
                 <div class="table">
                   <table>

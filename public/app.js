@@ -145,6 +145,66 @@ function validateCohortInputs(form) {
   return false;
 }
 
+function isOtherText(value) {
+  return /^其他[:：]/.test(String(value || "").trim());
+}
+
+function stripOtherText(value) {
+  return String(value || "").trim().replace(/^其他[:：]\s*/, "");
+}
+
+function replaceOtherAnswer(data, fieldName, answer) {
+  const nextAnswer = `其他：${answer}`;
+  const current = data[fieldName];
+  if (Array.isArray(current)) {
+    const next = current.filter((item) => String(item || "").trim() !== "其他" && !isOtherText(item));
+    next.push(nextAnswer);
+    data[fieldName] = next;
+    return;
+  }
+  if (String(current || "").trim() === "其他" || isOtherText(current)) {
+    data[fieldName] = nextAnswer;
+  }
+}
+
+function applyOtherAnswers(data, form) {
+  $$("[data-other-text-for]", form).forEach((input) => {
+    const fieldName = input.dataset.otherTextFor;
+    const answer = String(input.value || "").trim();
+    if (!fieldName) return;
+    delete data[input.name];
+    if (!answer) return;
+    const toggle = form.querySelector(`[data-other-toggle-for="${fieldName}"]`);
+    if (toggle?.checked) replaceOtherAnswer(data, fieldName, answer);
+  });
+}
+
+function fillOtherInputs(form, data) {
+  $$("[data-other-text-for]", form).forEach((input) => {
+    const fieldName = input.dataset.otherTextFor;
+    if (!fieldName || data[fieldName] == null) return;
+    const otherValue = asArray(data[fieldName]).find(isOtherText);
+    if (!otherValue) return;
+    input.value = stripOtherText(otherValue);
+    const toggle = form.querySelector(`[data-other-toggle-for="${fieldName}"]`);
+    if (toggle) toggle.checked = true;
+  });
+}
+
+function validateOtherInputs(form) {
+  const invalid = $$("[data-other-text-for]", form).find((input) => {
+    const fieldName = input.dataset.otherTextFor;
+    if (!fieldName) return false;
+    const toggle = form.querySelector(`[data-other-toggle-for="${fieldName}"]`);
+    input.setCustomValidity("");
+    return toggle?.checked && !String(input.value || "").trim();
+  });
+  if (!invalid) return true;
+  invalid.setCustomValidity("选择“其他”时，请补充具体内容。");
+  invalid.reportValidity();
+  return false;
+}
+
 function normalizeListPayload(payload, keys) {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== "object") return [];
@@ -178,6 +238,7 @@ function formToObject(form) {
       data[key] = clean;
     }
   }
+  applyOtherAnswers(data, form);
   return data;
 }
 
@@ -198,6 +259,7 @@ function fillForm(form, data) {
     const nextValue = name === "cohort" ? cohortInputValue(value) : value;
     field.value = Array.isArray(nextValue) ? nextValue.join("、") : nextValue;
   });
+  fillOtherInputs(form, data);
 }
 
 function hasFormValue(form, name) {
@@ -940,6 +1002,7 @@ async function submitSurvey(event) {
   event.preventDefault();
   const button = $("#surveySubmit");
   const message = $("#surveyMsg");
+  if (!validateOtherInputs(event.currentTarget)) return;
   const survey = formToObject(event.currentTarget);
   state.lastSurveyAffiliation = survey.csight_affiliation || "";
   state.surveyContact = survey;
@@ -1482,6 +1545,19 @@ function bindEvents() {
   });
   $$("[data-fill-example]").forEach((button) => {
     button.addEventListener("click", () => fillExample(button));
+  });
+  $$("[data-other-text-for]").forEach((input) => {
+    input.addEventListener("focus", () => {
+      const fieldName = input.dataset.otherTextFor;
+      const toggle = fieldName ? input.closest("form")?.querySelector(`[data-other-toggle-for="${fieldName}"]`) : null;
+      if (toggle) toggle.checked = true;
+    });
+    input.addEventListener("input", () => {
+      input.setCustomValidity("");
+      const fieldName = input.dataset.otherTextFor;
+      const toggle = fieldName ? input.closest("form")?.querySelector(`[data-other-toggle-for="${fieldName}"]`) : null;
+      if (toggle && input.value.trim()) toggle.checked = true;
+    });
   });
   $$("[data-gallery-prev]").forEach((button) => {
     button.addEventListener("click", () => moveGallery(-1));

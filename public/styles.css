@@ -99,6 +99,23 @@ button {
   justify-content: space-between;
 }
 
+.wrap,
+.card,
+.letter-panel,
+.question,
+.field,
+.option {
+  min-width: 0;
+}
+
+h1,
+h2,
+h3,
+p,
+label {
+  overflow-wrap: anywhere;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -297,6 +314,70 @@ main {
   align-items: start;
 }
 
+.anniversary-banner {
+  min-height: 310px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(183, 102, 60, .22);
+  background:
+    linear-gradient(90deg, rgba(255, 253, 248, .94), rgba(255, 253, 248, .62) 52%, rgba(255, 253, 248, .24)),
+    url("./gallery/csight-12-banner.webp") center / cover no-repeat;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.anniversary-banner::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(216, 208, 194, .42);
+  pointer-events: none;
+}
+
+.anniversary-copy {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
+  max-width: 860px;
+  padding: 38px 46px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.anniversary-copy h1 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--serif);
+  color: #211e1a;
+  line-height: .88;
+}
+
+.anniversary-copy h1 span {
+  font-size: 44px;
+  font-weight: 600;
+}
+
+.anniversary-copy h1 strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 168px;
+  line-height: .78;
+  color: #1f1b17;
+  font-style: italic;
+  font-weight: 800;
+  text-shadow: 0 12px 0 rgba(183, 102, 60, .18), 0 2px 18px rgba(42, 35, 26, .14);
+}
+
+.anniversary-copy p {
+  margin: 22px 0 0;
+  max-width: 580px;
+  color: #4d463d;
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.8;
+}
+
 .letter-panel {
   background: rgba(255, 253, 248, .88);
   border: 1px solid var(--line);
@@ -338,6 +419,11 @@ h1 {
   font-size: clamp(38px, 6vw, 66px);
   line-height: 1.05;
   font-weight: 600;
+}
+
+.letter-title {
+  font-size: 42px;
+  line-height: 1.12;
 }
 
 h2 {
@@ -442,6 +528,61 @@ h3 {
 
 .letter-detail-body {
   margin-top: 18px;
+}
+
+.line-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin: 0 0 14px;
+  padding: 3px 9px;
+  border: 1px solid rgba(64, 94, 124, .18);
+  background: rgba(238, 243, 248, .72);
+  color: var(--indigo);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.podcast-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid rgba(64, 94, 124, .16);
+  background: rgba(255, 255, 255, .66);
+  color: inherit;
+  text-decoration: none;
+}
+
+.podcast-card:hover {
+  border-color: rgba(183, 102, 60, .34);
+  background: #fff8ef;
+}
+
+.podcast-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, .08);
+}
+
+.podcast-card span {
+  display: grid;
+  gap: 4px;
+  line-height: 1.35;
+}
+
+.podcast-card b {
+  color: #25231f;
+}
+
+.podcast-card small {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
 }
 
 .letter-list {
@@ -1174,6 +1315,20 @@ textarea:focus {
   accent-color: var(--tea);
 }
 
+.option-other {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.other-input {
+  flex: 1 1 160px;
+  min-width: 150px;
+  min-height: 36px;
+  padding: 6px 8px;
+  font-size: 14px;
+  background: rgba(255, 253, 248, .9);
+}
+
 .example-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1473,6 +1628,14 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 
+  .anniversary-copy h1 strong {
+    font-size: 132px;
+  }
+
+  .anniversary-copy h1 span {
+    font-size: 38px;
+  }
+
   .form-grid,
   .form-grid.two,
   .data-grid,
@@ -1520,6 +1683,7 @@ tr:hover td {
 @media (max-width: 560px) {
   .topbar-inner {
     padding: 14px;
+    flex-wrap: wrap;
   }
 
   .nav {
@@ -1540,8 +1704,40 @@ tr:hover td {
     padding: 18px;
   }
 
+  .anniversary-banner {
+    min-height: 270px;
+  }
+
+  .anniversary-copy {
+    padding: 26px 22px;
+  }
+
+  .anniversary-copy h1 {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .anniversary-copy h1 strong {
+    font-size: 92px;
+    line-height: .82;
+  }
+
+  .anniversary-copy h1 span {
+    font-size: 30px;
+  }
+
+  .anniversary-copy p {
+    font-size: 16px;
+    line-height: 1.72;
+  }
+
   .letter-panel::before {
     inset: 10px;
+  }
+
+  .letter-title {
+    font-size: 31px;
   }
 
   h1 {

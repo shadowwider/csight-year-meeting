@@ -98,7 +98,7 @@ export function normalizePhone(value: unknown): string {
 
 export function normalizeCohort(value: unknown): string {
   const text = normalizeText(value).replace(/\s+/g, "");
-  if (!text || text === "不确定") {
+  if (!text || ["不知道", "不记得", "不确定"].includes(text)) {
     return "";
   }
   const digits = text.match(/\d+/)?.[0];

@@ -41,7 +41,7 @@ import type {
 const EVENT_CONFIG = {
   date: "2026-07-25",
   theme: "Passion",
-  checkInTime: "12:00",
+  time: "12:00",
   address: "上海市徐汇区田林路130号20号楼",
 };
 
@@ -423,6 +423,9 @@ function extractMemberFields(body: Record<string, unknown>): Partial<MemberWrite
 
   assignStringField(fields, "spiritName", sources, ["spiritName", "spirit_name", "精灵名"]);
   assignNullableField(fields, "cohort", sources, ["cohort", "期数", "所在期数"]);
+  if ("cohort" in fields) {
+    fields.cohort = normalizeCohortForWrite(fields.cohort) ?? null;
+  }
   assignNullableField(fields, "realName", sources, ["realName", "real_name", "姓名", "真实姓名"]);
   assignPhoneField(fields, sources, ["phone", "手机号", "当前手机号"]);
   assignNullableField(fields, "wechat", sources, ["wechat", "微信号", "微信"]);
@@ -556,10 +559,10 @@ function extractSurveyFields(body: Record<string, unknown>): SurveyWriteFields {
 
 function extractRecoveryFields(body: Record<string, unknown>): RecoveryWriteFields {
   const sources = nestedSources(body, ["recovery", "fields"]);
-  return {
+  const fields = {
     realName: aliasedText(sources, ["realName", "real_name", "姓名", "真实姓名"]),
     spiritName: aliasedText(sources, ["spiritName", "spirit_name", "精灵名", "可能的精灵名"]),
-    cohort: aliasedText(sources, ["cohort", "期数", "所在期数"]),
+    cohort: normalizeCohortForWrite(aliasedText(sources, ["cohort", "期数", "所在期数"])) ?? null,
     phone: normalizeNullablePhone(getAliasedValue(sources, ["phone", "手机号", "当前手机号"])),
     oldContact: aliasedText(sources, ["oldContact", "old_contact", "旧手机号 / 微信 / 邮箱任一", "旧联系方式"]),
     contactPreference: aliasedText(sources, [
@@ -570,6 +573,8 @@ function extractRecoveryFields(body: Record<string, unknown>): RecoveryWriteFiel
     ]),
     note: aliasedText(sources, ["note", "补充说明", "说明"]),
   };
+  validateCohortValue(fields.cohort, { required: false });
+  return fields;
 }
 
 function mergeSurveyBackToMember(
@@ -589,7 +594,7 @@ function mergeSurveyBackToMember(
 function completeMemberFields(fields: Partial<MemberWriteFields>): MemberWriteFields {
   return {
     spiritName: normalizeText(fields.spiritName),
-    cohort: fields.cohort ?? null,
+    cohort: normalizeCohortForWrite(fields.cohort) ?? null,
     realName: fields.realName ?? null,
     phone: normalizePhone(fields.phone),
     wechat: fields.wechat ?? null,
@@ -612,12 +617,34 @@ function validateMemberUpdate(
   if ("spiritName" in fields && !normalizeText(fields.spiritName)) {
     throw new RequestError(400, "invalid_member", "精灵名不能为空。");
   }
-  if ((options.requireCohort || "cohort" in fields) && !normalizeText(fields.cohort)) {
-    throw new RequestError(400, "invalid_member", "请选择创见期数；如果不确定，可以选择“不记得”。");
+  if (options.requireCohort || "cohort" in fields) {
+    validateCohortValue(fields.cohort, { required: Boolean(options.requireCohort) });
   }
   if ("phone" in fields && !normalizePhone(fields.phone)) {
     throw new RequestError(400, "invalid_member", "手机号不能为空。");
   }
+}
+
+function normalizeCohortForWrite(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  const text = normalizeText(value).replace(/\s+/g, "");
+  if (!text) return null;
+  if (["不知道", "不记得", "不确定"].includes(text)) return "不知道";
+  const legacy = text.match(/^第?([1-9]\d*)期?$/);
+  if (legacy) return legacy[1];
+  return text;
+}
+
+function validateCohortValue(value: unknown, options: { required: boolean }): void {
+  const text = normalizeText(value);
+  if (!text) {
+    if (options.required) {
+      throw new RequestError(400, "invalid_member", "请填写创见期数；如果不确定，请填“不知道”。");
+    }
+    return;
+  }
+  if (text === "不知道" || /^[1-9]\d*$/.test(text)) return;
+  throw new RequestError(400, "invalid_member", "期数只能填写数字，例如 12；如果不确定，请填“不知道”。");
 }
 
 async function requireVerifiedMember(env: Env, token: string): Promise<Member> {

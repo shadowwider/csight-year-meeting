@@ -16,6 +16,7 @@ const state = {
   pendingSurveySubmit: false,
   pendingSurveyData: null,
   resumingSurveySubmit: false,
+  galleryIndex: 0,
   adminMembersRows: [],
   adminResponsesRows: []
 };
@@ -44,6 +45,19 @@ const CITY_COORDS = {
   "武汉市": [114.3054, 30.5931],
   "武汉": [114.3054, 30.5931]
 };
+
+const GALLERY_IMAGES = [
+  { src: "./gallery/csight-gallery-01.png", alt: "创见活动相册照片 1" },
+  { src: "./gallery/csight-gallery-02.png", alt: "创见活动相册照片 2" },
+  { src: "./gallery/csight-gallery-03.jpg", alt: "创见活动相册照片 3" },
+  { src: "./gallery/csight-gallery-04.jpg", alt: "创见活动相册照片 4" },
+  { src: "./gallery/csight-gallery-05.jpg", alt: "创见活动相册照片 5" },
+  { src: "./gallery/csight-gallery-06.jpg", alt: "创见活动相册照片 6" },
+  { src: "./gallery/csight-gallery-07.jpg", alt: "创见活动相册照片 7" },
+  { src: "./gallery/csight-gallery-08.png", alt: "创见活动相册照片 8" },
+  { src: "./gallery/csight-gallery-09.png", alt: "创见活动相册照片 9" },
+  { src: "./gallery/csight-gallery-10.jpg", alt: "创见活动相册照片 10" }
+];
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -97,6 +111,40 @@ function displayValue(value, fallback = "未填写") {
   return value || fallback;
 }
 
+function cohortInputValue(value) {
+  const text = String(value ?? "").trim().replace(/\s+/g, "");
+  if (!text) return "";
+  if (["不知道", "不记得", "不确定"].includes(text)) return "不知道";
+  const legacy = text.match(/^第?([1-9]\d*)期?$/);
+  if (legacy) return legacy[1];
+  return text;
+}
+
+function isAllowedCohortInput(value) {
+  const text = String(value || "").trim();
+  return text === "" || text === "不知道" || /^[1-9]\d*$/.test(text);
+}
+
+function normalizeCohortInputs(form) {
+  $$('[name="cohort"]', form).forEach((field) => {
+    field.value = cohortInputValue(field.value);
+    field.setCustomValidity("");
+  });
+}
+
+function validateCohortInputs(form) {
+  normalizeCohortInputs(form);
+  const invalid = $$('[name="cohort"]', form).find((field) => {
+    const value = String(field.value || "").trim();
+    if (!value && !field.required) return false;
+    return !isAllowedCohortInput(value);
+  });
+  if (!invalid) return true;
+  invalid.setCustomValidity("期数只能填写数字，例如 12；如果不确定，请填“不知道”。");
+  invalid.reportValidity();
+  return false;
+}
+
 function normalizeListPayload(payload, keys) {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== "object") return [];
@@ -122,7 +170,8 @@ function formToObject(form) {
   const data = {};
   const formData = new FormData(form);
   for (const [key, value] of formData.entries()) {
-    const clean = typeof value === "string" ? value.trim() : value;
+    let clean = typeof value === "string" ? value.trim() : value;
+    if (key === "cohort") clean = cohortInputValue(clean);
     if (data[key] !== undefined) {
       data[key] = asArray(data[key]).concat(clean);
     } else {
@@ -146,7 +195,8 @@ function fillForm(form, data) {
       field.checked = String(value) === field.value;
       return;
     }
-    field.value = Array.isArray(value) ? value.join("、") : value;
+    const nextValue = name === "cohort" ? cohortInputValue(value) : value;
+    field.value = Array.isArray(nextValue) ? nextValue.join("、") : nextValue;
   });
 }
 
@@ -669,6 +719,7 @@ async function handleVerify(event) {
   const form = event.currentTarget;
   const button = $("#verifySubmit");
   const message = $("#verifyMsg");
+  if (!validateCohortInputs(form)) return;
   const data = formToObject(form);
 
   if (!hasMemberMatchInput(data)) {
@@ -747,6 +798,7 @@ async function submitContact(event) {
   event.preventDefault();
   const button = $("#contactSubmit");
   const message = $("#contactMsg");
+  if (!validateCohortInputs(event.currentTarget)) return;
   const isExistingMember = hasVerifiedIdentity();
   const data = {
     ...(isExistingMember ? getTokenPayload() : {}),
@@ -963,6 +1015,7 @@ async function submitRecovery(event) {
   const form = event.currentTarget;
   const button = $("#recoverSubmit");
   const message = $("#recoverMsg");
+  if (!validateCohortInputs(form)) return;
   const data = formToObject(form);
   if (!data.phone && !data.old_contact && !data.wechat) {
     setMessage(message, "error", "请至少填写当前手机号或一个旧联系方式，方便秘书处核对。");
@@ -1138,7 +1191,7 @@ function cohortRank(value) {
   const text = String(value || "");
   const digit = text.match(/\d+/)?.[0];
   if (digit) return Number(digit);
-  if (text.includes("不记得")) return 90;
+  if (text.includes("不知道")) return 90;
   if (!text) return 99;
   return 80;
 }
@@ -1331,6 +1384,58 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function renderGallery() {
+  if (!GALLERY_IMAGES.length) return;
+  const image = GALLERY_IMAGES[state.galleryIndex % GALLERY_IMAGES.length];
+  const galleryImage = $("#galleryImage");
+  const lightboxImage = $("#galleryLightboxImage");
+  if (galleryImage) {
+    galleryImage.src = image.src;
+    galleryImage.alt = image.alt;
+  }
+  if (lightboxImage) {
+    lightboxImage.src = image.src;
+    lightboxImage.alt = image.alt;
+  }
+  const dots = $("#galleryDots");
+  if (dots) {
+    dots.innerHTML = GALLERY_IMAGES.map((_, index) => `
+      <button type="button" class="${index === state.galleryIndex ? "on" : ""}" data-gallery-index="${index}" aria-label="查看第 ${index + 1} 张"></button>
+    `).join("");
+    $$("[data-gallery-index]", dots).forEach((button) => {
+      button.addEventListener("click", () => {
+        state.galleryIndex = Number(button.dataset.galleryIndex);
+        renderGallery();
+      });
+    });
+  }
+}
+
+function moveGallery(step) {
+  if (!GALLERY_IMAGES.length) return;
+  state.galleryIndex = (state.galleryIndex + step + GALLERY_IMAGES.length) % GALLERY_IMAGES.length;
+  renderGallery();
+}
+
+function openGallery() {
+  renderGallery();
+  $("#galleryLightbox")?.classList.remove("hidden");
+}
+
+function closeGallery() {
+  $("#galleryLightbox")?.classList.add("hidden");
+}
+
+function fillExample(button) {
+  const name = button.dataset.fillExample;
+  const form = button.closest("form");
+  if (!name || !form) return;
+  const field = form.querySelector(`[name="${name}"]`);
+  if (!field) return;
+  field.value = button.textContent.trim();
+  field.focus();
+}
+
 function bindEvents() {
   $$("[data-route]").forEach((button) => {
     button.addEventListener("click", (event) => {
@@ -1375,6 +1480,27 @@ function bindEvents() {
       renderResponsesTable();
     }
   });
+  $$("[data-fill-example]").forEach((button) => {
+    button.addEventListener("click", () => fillExample(button));
+  });
+  $$("[data-gallery-prev]").forEach((button) => {
+    button.addEventListener("click", () => moveGallery(-1));
+  });
+  $$("[data-gallery-next]").forEach((button) => {
+    button.addEventListener("click", () => moveGallery(1));
+  });
+  $("#galleryOpen")?.addEventListener("click", openGallery);
+  $("[data-gallery-close]")?.addEventListener("click", closeGallery);
+  $("#galleryLightbox")?.addEventListener("click", (event) => {
+    if (event.target.id === "galleryLightbox") closeGallery();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeGallery();
+    if (!$("#galleryLightbox")?.classList.contains("hidden")) {
+      if (event.key === "ArrowLeft") moveGallery(-1);
+      if (event.key === "ArrowRight") moveGallery(1);
+    }
+  });
   $("#responsesBody")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-delete-response]");
     if (!button) return;
@@ -1384,6 +1510,7 @@ function bindEvents() {
 
 function boot() {
   bindEvents();
+  renderGallery();
   enableContactForm(hasVerifiedIdentity());
   if (state.adminPassword) $("#adminPassword").value = state.adminPassword;
   restoreDraft();

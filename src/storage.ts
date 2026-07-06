@@ -506,56 +506,86 @@ export async function importMembers(
 
   for (const record of records) {
     try {
-      const existed = await db
-        .prepare("SELECT id FROM members WHERE phone = ? LIMIT 1")
-        .bind(record.phone)
-        .first<{ id: string }>();
+      const normalizedPhone = normalizePhone(record.phone);
+      const existed = normalizedPhone
+        ? await db
+            .prepare("SELECT id FROM members WHERE phone = ? LIMIT 1")
+            .bind(normalizedPhone)
+            .first<{ id: string }>()
+        : null;
       const memberId = existed?.id ?? crypto.randomUUID();
 
-      await db
-        .prepare(
-          `INSERT INTO members (
+      if (existed) {
+        await db
+          .prepare(
+            `UPDATE members
+             SET spirit_name = ?,
+                 cohort = ?,
+                 real_name = ?,
+                 phone = ?,
+                 wechat = ?,
+                 email = ?,
+                 province = ?,
+                 city = ?,
+                 company_title = ?,
+                 focus_fields = ?,
+                 current_status = ?,
+                 self_intro = ?,
+                 role = ?,
+                 directory_visibility = ?,
+                 updated_at = ?
+             WHERE id = ?`,
+          )
+          .bind(
+            record.spiritName,
+            record.cohort,
+            record.realName,
+            normalizedPhone,
+            record.wechat,
+            record.email,
+            record.province,
+            record.city,
+            record.companyTitle,
+            record.focusFields,
+            record.currentStatus,
+            record.selfIntro,
+            record.role ?? "校友",
+            record.directoryVisibility ?? "internal",
+            importedAt,
+            memberId,
+          )
+          .run();
+      } else {
+        await db
+          .prepare(
+            `INSERT INTO members (
              id, spirit_name, cohort, real_name, phone, wechat, email, province, city,
              company_title, focus_fields, current_status, self_intro, role,
              directory_visibility, created_at, updated_at
            )
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(phone) DO UPDATE SET
-             spirit_name = excluded.spirit_name,
-             cohort = excluded.cohort,
-             real_name = excluded.real_name,
-             wechat = excluded.wechat,
-             email = excluded.email,
-             province = excluded.province,
-             city = excluded.city,
-             company_title = excluded.company_title,
-             focus_fields = excluded.focus_fields,
-             current_status = excluded.current_status,
-             self_intro = excluded.self_intro,
-             role = excluded.role,
-             directory_visibility = excluded.directory_visibility,
-             updated_at = excluded.updated_at`,
-        )
-        .bind(
-          memberId,
-          record.spiritName,
-          record.cohort,
-          record.realName,
-          normalizePhone(record.phone),
-          record.wechat,
-          record.email,
-          record.province,
-          record.city,
-          record.companyTitle,
-          record.focusFields,
-          record.currentStatus,
-          record.selfIntro,
-          record.role ?? "校友",
-          record.directoryVisibility ?? "internal",
-          importedAt,
-          importedAt,
-        )
-        .run();
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            memberId,
+            record.spiritName,
+            record.cohort,
+            record.realName,
+            normalizedPhone,
+            record.wechat,
+            record.email,
+            record.province,
+            record.city,
+            record.companyTitle,
+            record.focusFields,
+            record.currentStatus,
+            record.selfIntro,
+            record.role ?? "校友",
+            record.directoryVisibility ?? "internal",
+            importedAt,
+            importedAt,
+          )
+          .run();
+      }
 
       if (existed) {
         updated += 1;
@@ -850,7 +880,7 @@ async function prepareMemberUpdateFields(
     if (value === undefined) {
       continue;
     }
-    normalized[key] = key === "phone" && value !== null ? (normalizePhone(value) || null) : value;
+    normalized[key] = key === "phone" ? (normalizePhone(value) || "") : value;
   }
 
   if (normalized.phone) {
@@ -883,7 +913,7 @@ function mapJoinedSurvey(row: JoinedSurveyRow): SurveyResponseWithMember {
           spirit_name: row.m_spirit_name ?? "",
           cohort: row.m_cohort,
           real_name: row.m_real_name,
-          phone: row.m_phone,
+          phone: row.m_phone ?? "",
           wechat: row.m_wechat,
           email: row.m_email,
           province: row.m_province,

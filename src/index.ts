@@ -598,7 +598,7 @@ function completeMemberFields(fields: Partial<MemberWriteFields>): MemberWriteFi
     spiritName: normalizeText(fields.spiritName),
     cohort: normalizeCohortForWrite(fields.cohort) ?? null,
     realName: fields.realName ?? null,
-    phone: normalizePhone(fields.phone) || null,
+    phone: normalizePhone(fields.phone) || "",
     wechat: fields.wechat ?? null,
     email: fields.email ?? null,
     province: fields.province ?? null,

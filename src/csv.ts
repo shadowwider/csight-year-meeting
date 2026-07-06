@@ -148,7 +148,7 @@ export function parseMembersCsv(text: string): ParsedMemberCsv {
       spiritName: getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.spiritName),
       cohort: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.cohort)),
       realName: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.realName)),
-      phone: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.phone)),
+      phone: getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.phone),
       wechat: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.wechat)),
       email: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.email)),
       province: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.province)),
@@ -173,7 +173,7 @@ export function parseMembersCsv(text: string): ParsedMemberCsv {
       continue;
     }
 
-    const normalizedPhone = record.phone ? normalizeCsvPhone(record.phone) : null;
+    const normalizedPhone = record.phone ? normalizeCsvPhone(record.phone) : "";
     if (normalizedPhone) {
       if (phonesInFile.has(normalizedPhone)) {
         errors.push({ row: sourceRow, message: "CSV 中手机号重复，已跳过该行" });

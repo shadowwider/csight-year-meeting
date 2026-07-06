@@ -47,16 +47,16 @@ const CITY_COORDS = {
 };
 
 const GALLERY_IMAGES = [
-  { src: "./gallery/csight-gallery-01.png", alt: "创见活动相册照片 1" },
-  { src: "./gallery/csight-gallery-02.png", alt: "创见活动相册照片 2" },
-  { src: "./gallery/csight-gallery-03.jpg", alt: "创见活动相册照片 3" },
-  { src: "./gallery/csight-gallery-04.jpg", alt: "创见活动相册照片 4" },
-  { src: "./gallery/csight-gallery-05.jpg", alt: "创见活动相册照片 5" },
-  { src: "./gallery/csight-gallery-06.jpg", alt: "创见活动相册照片 6" },
-  { src: "./gallery/csight-gallery-07.jpg", alt: "创见活动相册照片 7" },
-  { src: "./gallery/csight-gallery-08.png", alt: "创见活动相册照片 8" },
-  { src: "./gallery/csight-gallery-09.png", alt: "创见活动相册照片 9" },
-  { src: "./gallery/csight-gallery-10.jpg", alt: "创见活动相册照片 10" }
+  { src: "./gallery/csight-gallery-01.png", caption: "石头村村民合影" },
+  { src: "./gallery/csight-gallery-02.png", caption: "石头村线上观影会" },
+  { src: "./gallery/csight-gallery-03.jpg", caption: "线下冥想工作坊——带领人：石头奶奶" },
+  { src: "./gallery/csight-gallery-04.jpg", caption: "线下版画工作坊——带领人：紫霞" },
+  { src: "./gallery/csight-gallery-05.jpg", caption: "即行二期年度复盘工作坊 带领人：阿圆" },
+  { src: "./gallery/csight-gallery-06.jpg", caption: "即行二期职业探索工作坊 带领人：风信子馒头" },
+  { src: "./gallery/csight-gallery-07.jpg", caption: "百宝乡活动纪实" },
+  { src: "./gallery/csight-gallery-08.png", caption: "百宝乡鞋狗读书会活动" },
+  { src: "./gallery/csight-gallery-09.png", caption: "百宝乡第一期分享会" },
+  { src: "./gallery/csight-gallery-10.jpg", caption: "线下艺术疗愈工作坊——带领人：地图" }
 ];
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -1482,20 +1482,29 @@ function escapeHtml(value) {
 function renderGallery() {
   if (!GALLERY_IMAGES.length) return;
   const image = GALLERY_IMAGES[state.galleryIndex % GALLERY_IMAGES.length];
+  const caption = image.caption || `创见活动相册照片 ${state.galleryIndex + 1}`;
   const galleryImage = $("#galleryImage");
   const lightboxImage = $("#galleryLightboxImage");
+  const galleryCaption = $("#galleryCaption");
+  const lightboxCaption = $("#galleryLightboxCaption");
+  const galleryOpen = $("#galleryOpen");
+  const lightbox = $("#galleryLightbox");
   if (galleryImage) {
     galleryImage.src = image.src;
-    galleryImage.alt = image.alt;
+    galleryImage.alt = caption;
   }
   if (lightboxImage) {
     lightboxImage.src = image.src;
-    lightboxImage.alt = image.alt;
+    lightboxImage.alt = caption;
   }
+  if (galleryCaption) galleryCaption.textContent = caption;
+  if (lightboxCaption) lightboxCaption.textContent = caption;
+  galleryOpen?.setAttribute("aria-label", `放大查看照片：${caption}`);
+  lightbox?.setAttribute("aria-label", `相册大图：${caption}`);
   const dots = $("#galleryDots");
   if (dots) {
-    dots.innerHTML = GALLERY_IMAGES.map((_, index) => `
-      <button type="button" class="${index === state.galleryIndex ? "on" : ""}" data-gallery-index="${index}" aria-label="查看第 ${index + 1} 张"></button>
+    dots.innerHTML = GALLERY_IMAGES.map((item, index) => `
+      <button type="button" class="${index === state.galleryIndex ? "on" : ""}" data-gallery-index="${index}" aria-label="查看第 ${index + 1} 张：${escapeHtml(item.caption)}"></button>
     `).join("");
     $$("[data-gallery-index]", dots).forEach((button) => {
       button.addEventListener("click", () => {

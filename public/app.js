@@ -205,6 +205,19 @@ function validateOtherInputs(form) {
   return false;
 }
 
+function hasContactMethod(data) {
+  return Boolean(String(data.phone || "").trim() || String(data.wechat || "").trim() || String(data.email || "").trim());
+}
+
+function validateContactMethods(form, messageNode, contextText = "请至少填写手机号、微信号或邮箱中的一项，方便后续联系。") {
+  const data = formToObject(form);
+  if (hasContactMethod(data)) return true;
+  setMessage(messageNode, "error", contextText);
+  const first = form.querySelector('[name="phone"], [name="wechat"], [name="email"]');
+  first?.focus();
+  return false;
+}
+
 function normalizeListPayload(payload, keys) {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== "object") return [];
@@ -306,6 +319,7 @@ function surveyFormDataFromMember(member) {
     spirit_name: member.spirit_name || member.spiritName || "",
     phone: member.phone || "",
     wechat: member.wechat || "",
+    email: member.email || "",
     current_status: member.current_status || member.currentStatus || "",
     focus_fields: member.focus_fields || member.focusFields || "",
     self_intro: member.self_intro || member.selfIntro || "",
@@ -315,6 +329,11 @@ function surveyFormDataFromMember(member) {
 
 function surveyFormDataFromResponse(response) {
   return {
+    survey_name: response.survey_name || response.surveyName || "",
+    spirit_name: response.spirit_name || response.spiritName || "",
+    phone: response.phone || "",
+    wechat: response.wechat || "",
+    email: response.email || "",
     will_attend: response.will_attend || response.willAttend || "",
     current_status: response.current_status || response.currentStatus || "",
     focus_fields: response.focus_fields || response.focusFields || "",
@@ -362,7 +381,8 @@ function syncSurveyIdentityFromMember(member) {
     survey_name: member.real_name || member.realName || member.spirit_name || member.spiritName || "",
     spirit_name: member.spirit_name || member.spiritName || "",
     phone: member.phone || "",
-    wechat: member.wechat || ""
+    wechat: member.wechat || "",
+    email: member.email || ""
   });
 }
 
@@ -519,13 +539,14 @@ function memberMatchPayload(source = {}) {
     spirit_name: spiritName,
     real_name: name || spiritName,
     phone: source.phone || "",
-    wechat: source.wechat || ""
+    wechat: source.wechat || "",
+    email: source.email || ""
   };
 }
 
 function hasMemberMatchInput(source = {}) {
   const payload = memberMatchPayload(source);
-  return Boolean(payload.spirit_name || payload.real_name || payload.phone || payload.wechat);
+  return Boolean(payload.spirit_name || payload.real_name || payload.phone || payload.wechat || payload.email);
 }
 
 async function findMemberMatches(source = {}) {
@@ -627,6 +648,7 @@ function showVerifiedContactFallback(seed = {}) {
     cohort: seed.cohort || "",
     phone: seed.phone || "",
     wechat: seed.wechat || "",
+    email: seed.email || "",
     directory_visibility: "internal"
   });
 }
@@ -861,6 +883,7 @@ async function submitContact(event) {
   const button = $("#contactSubmit");
   const message = $("#contactMsg");
   if (!validateCohortInputs(event.currentTarget)) return;
+  if (!validateContactMethods(event.currentTarget, message, "请至少填写手机号、微信号或邮箱中的一项，方便秘书处后续联系。")) return;
   const isExistingMember = hasVerifiedIdentity();
   const data = {
     ...(isExistingMember ? getTokenPayload() : {}),
@@ -931,7 +954,8 @@ async function completePendingSurveyAfterContact() {
     survey_name: state.member.real_name || state.member.realName || state.member.spirit_name || state.member.spiritName || "",
     spirit_name: state.member.spirit_name || state.member.spiritName || "",
     phone: state.member.phone || "",
-    wechat: state.member.wechat || ""
+    wechat: state.member.wechat || "",
+    email: state.member.email || ""
   } : {};
   const survey = {
     ...(state.pendingSurveyData || {}),
@@ -977,6 +1001,7 @@ function prefillContactFromSurvey(survey) {
     cohort: survey.cohort || "",
     phone: survey.phone || "",
     wechat: survey.wechat || "",
+    email: survey.email || "",
     current_status: survey.current_status || "",
     focus_fields: displayValue(survey.focus_fields, ""),
     self_intro: survey.self_intro || "",
@@ -1003,6 +1028,7 @@ async function submitSurvey(event) {
   const button = $("#surveySubmit");
   const message = $("#surveyMsg");
   if (!validateOtherInputs(event.currentTarget)) return;
+  if (!validateContactMethods(event.currentTarget, message, "请至少留下手机号、微信号或邮箱中的一项，方便秘书处后续联系报名和活动信息。")) return;
   const survey = formToObject(event.currentTarget);
   state.lastSurveyAffiliation = survey.csight_affiliation || "";
   state.surveyContact = survey;
@@ -1191,7 +1217,7 @@ function renderResponsesTable() {
   $("#adminResponsesSummary").textContent = state.adminResponsesRows.length
     ? `${rows.length} / ${state.adminResponsesRows.length} 条问卷回应`
     : "接口未返回问卷回应";
-  renderTable("#responsesBody", rows, 8, renderResponseRow);
+  renderTable("#responsesBody", rows, 9, renderResponseRow);
 }
 
 function renderResponseRow(row) {
@@ -1199,6 +1225,7 @@ function renderResponseRow(row) {
   return `
     <tr>
       <td>${escapeHtml(displayValue(responseName(row), ""))}</td>
+      <td>${escapeHtml(displayValue(responseEmail(row), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "will_attend", "willAttend"), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "current_status", "currentStatus"), ""))}</td>
       <td>${escapeHtml(displayValue(responseValue(row, "future_activities", "futureActivities"), ""))}</td>
@@ -1294,6 +1321,11 @@ function clearResponseFilters() {
 
 function responseValue(row, snakeKey, camelKey) {
   return row.response?.[camelKey] ?? row.response?.[snakeKey] ?? row[snakeKey] ?? row[camelKey];
+}
+
+function responseEmail(row) {
+  const payload = row.response?.payload || row.payload || {};
+  return row.member?.email || payload.email || row.email;
 }
 
 function responseName(row) {

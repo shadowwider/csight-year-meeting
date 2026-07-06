@@ -121,13 +121,18 @@ export function parseMembersCsv(text: string): ParsedMemberCsv {
   }
 
   const headers = rows[0].map((header) => header.trim());
-  const missingHeaders = [
-    requiredHeaderLabel("spiritName", headers),
-    requiredHeaderLabel("phone", headers),
-  ].filter((label): label is string => Boolean(label));
+  const missingHeaders = [requiredHeaderLabel("spiritName", headers)].filter((label): label is string =>
+    Boolean(label),
+  );
+  const hasContactHeader = ["phone", "wechat", "email"].some((field) =>
+    MEMBER_FIELD_ALIASES[field as "phone" | "wechat" | "email"].some((alias) => headers.includes(alias)),
+  );
+  if (!hasContactHeader) {
+    missingHeaders.push("手机号 / 微信号 / 邮箱任一");
+  }
 
   if (missingHeaders.length > 0) {
-    throw new CsvValidationError("CSV 表头不完整，至少需要精灵名和手机号", missingHeaders);
+    throw new CsvValidationError("CSV 表头不完整，至少需要精灵名，以及手机号、微信号、邮箱中的任一联系方式", missingHeaders);
   }
 
   const headerIndex = new Map(headers.map((header, index) => [header, index]));
@@ -143,7 +148,7 @@ export function parseMembersCsv(text: string): ParsedMemberCsv {
       spiritName: getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.spiritName),
       cohort: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.cohort)),
       realName: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.realName)),
-      phone: getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.phone),
+      phone: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.phone)),
       wechat: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.wechat)),
       email: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.email)),
       province: nullable(getAliasedCell(row, headerIndex, MEMBER_FIELD_ALIASES.province)),
@@ -163,18 +168,20 @@ export function parseMembersCsv(text: string): ParsedMemberCsv {
       continue;
     }
 
-    if (!record.phone.trim()) {
-      errors.push({ row: sourceRow, message: "缺少必填字段：手机号" });
+    if (!record.phone && !record.wechat && !record.email) {
+      errors.push({ row: sourceRow, message: "缺少联系方式：手机号、微信号、邮箱至少填写一项" });
       continue;
     }
 
-    const normalizedPhone = normalizeCsvPhone(record.phone);
-    if (phonesInFile.has(normalizedPhone)) {
-      errors.push({ row: sourceRow, message: "CSV 中手机号重复，已跳过该行" });
-      continue;
+    const normalizedPhone = record.phone ? normalizeCsvPhone(record.phone) : null;
+    if (normalizedPhone) {
+      if (phonesInFile.has(normalizedPhone)) {
+        errors.push({ row: sourceRow, message: "CSV 中手机号重复，已跳过该行" });
+        continue;
+      }
+      phonesInFile.add(normalizedPhone);
     }
 
-    phonesInFile.add(normalizedPhone);
     records.push({ ...record, phone: normalizedPhone, spiritName: record.spiritName.trim() });
   }
 

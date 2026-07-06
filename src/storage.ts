@@ -163,16 +163,17 @@ export async function findVerifiedMember(
 
 export async function findMemberCandidates(
   db: D1Database,
-  input: { spiritName?: string | null; realName?: string | null; phone?: string | null; wechat?: string | null },
+  input: { spiritName?: string | null; realName?: string | null; phone?: string | null; wechat?: string | null; email?: string | null },
 ): Promise<Member[]> {
   const spiritName = normalizeComparable(input.spiritName);
   const realName = normalizeComparable(input.realName);
   const phone = normalizePhone(input.phone);
   const wechat = normalizeText(input.wechat);
+  const email = normalizeText(input.email).toLowerCase();
   const candidates: Member[] = [];
   const seen = new Set<string>();
 
-  if (!spiritName && !realName && !phone && !wechat) {
+  if (!spiritName && !realName && !phone && !wechat && !email) {
     return [];
   }
 
@@ -184,10 +185,11 @@ export async function findMemberCandidates(
           OR (? <> '' AND LOWER(REPLACE(COALESCE(real_name, ''), ' ', '')) = ?)
           OR (? <> '' AND REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') = ?)
           OR (? <> '' AND COALESCE(wechat, '') = ?)
+          OR (? <> '' AND LOWER(COALESCE(email, '')) = ?)
        ORDER BY cohort, spirit_name
        LIMIT 20`,
     )
-    .bind(spiritName, spiritName, realName, realName, phone, phone, wechat, wechat)
+    .bind(spiritName, spiritName, realName, realName, phone, phone, wechat, wechat, email, email)
     .all<MemberRow>();
 
   for (const row of result.results ?? []) {
@@ -848,7 +850,7 @@ async function prepareMemberUpdateFields(
     if (value === undefined) {
       continue;
     }
-    normalized[key] = key === "phone" && value !== null ? normalizePhone(value) : value;
+    normalized[key] = key === "phone" && value !== null ? (normalizePhone(value) || null) : value;
   }
 
   if (normalized.phone) {
@@ -881,7 +883,7 @@ function mapJoinedSurvey(row: JoinedSurveyRow): SurveyResponseWithMember {
           spirit_name: row.m_spirit_name ?? "",
           cohort: row.m_cohort,
           real_name: row.m_real_name,
-          phone: row.m_phone ?? "",
+          phone: row.m_phone,
           wechat: row.m_wechat,
           email: row.m_email,
           province: row.m_province,

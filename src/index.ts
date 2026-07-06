@@ -218,6 +218,7 @@ async function handleMemberCreate(request: Request, env: Env): Promise<Response>
   const fields = completeMemberFields(extractMemberFields(body));
 
   validateMemberUpdate(fields, { requireCohort: true });
+  validateMemberContact(fields);
   const member = await createMember(env.DB, fields, nowIso());
   const token = await createVerificationToken(env.DB, member.id, nowIso());
 
@@ -237,6 +238,7 @@ async function handleMemberMatches(request: Request, env: Env): Promise<Response
     realName: textOrNull(getAliasedValue([body], ["realName", "real_name", "survey_name", "姓名", "真实姓名"])),
     phone: textOrNull(getAliasedValue([body], ["phone", "手机号"])),
     wechat: textOrNull(getAliasedValue([body], ["wechat", "微信号", "微信"])),
+    email: textOrNull(getAliasedValue([body], ["email", "邮箱"])),
   });
   const issuedAt = nowIso();
   const matches = await Promise.all(candidates.map(async (member) => {
@@ -596,7 +598,7 @@ function completeMemberFields(fields: Partial<MemberWriteFields>): MemberWriteFi
     spiritName: normalizeText(fields.spiritName),
     cohort: normalizeCohortForWrite(fields.cohort) ?? null,
     realName: fields.realName ?? null,
-    phone: normalizePhone(fields.phone),
+    phone: normalizePhone(fields.phone) || null,
     wechat: fields.wechat ?? null,
     email: fields.email ?? null,
     province: fields.province ?? null,
@@ -620,8 +622,14 @@ function validateMemberUpdate(
   if (options.requireCohort || "cohort" in fields) {
     validateCohortValue(fields.cohort, { required: Boolean(options.requireCohort) });
   }
-  if ("phone" in fields && !normalizePhone(fields.phone)) {
+  if ("phone" in fields && normalizeText(fields.phone) && !normalizePhone(fields.phone)) {
     throw new RequestError(400, "invalid_member", "手机号不能为空。");
+  }
+}
+
+function validateMemberContact(fields: Partial<MemberWriteFields>): void {
+  if (!normalizePhone(fields.phone) && !normalizeText(fields.wechat) && !normalizeText(fields.email)) {
+    throw new RequestError(400, "invalid_member", "请至少填写手机号、微信号或邮箱中的一项。");
   }
 }
 
@@ -767,6 +775,7 @@ function exportResponsesCsv(items: SurveyResponseWithMember[]): string {
     { key: "cohort", label: "期数" },
     { key: "realName", label: "姓名" },
     { key: "phone", label: "手机号" },
+    { key: "email", label: "邮箱" },
     { key: "city", label: "城市" },
     { key: "willAttend", label: "是否参加年会" },
     { key: "currentStatus", label: "当前状态" },
@@ -792,6 +801,7 @@ function exportResponsesCsv(items: SurveyResponseWithMember[]): string {
     cohort: member?.cohort ?? payloadText(response.payload, "cohort"),
     realName: member?.realName ?? payloadText(response.payload, "real_name", "survey_name", "name"),
     phone: member?.phone ?? payloadText(response.payload, "phone"),
+    email: member?.email ?? payloadText(response.payload, "email"),
     city: member?.city ?? payloadText(response.payload, "city"),
     willAttend: response.willAttend,
     currentStatus: response.currentStatus,

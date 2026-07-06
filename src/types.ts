@@ -29,7 +29,7 @@ export interface MemberRow {
   spirit_name: string;
   cohort: string | null;
   real_name: string | null;
-  phone: string;
+  phone: string | null;
   wechat: string | null;
   email: string | null;
   province: string | null;
@@ -49,7 +49,7 @@ export interface Member {
   spiritName: string;
   cohort: string | null;
   realName: string | null;
-  phone: string;
+  phone: string | null;
   wechat: string | null;
   email: string | null;
   province: string | null;
@@ -68,7 +68,7 @@ export interface MemberWriteFields {
   spiritName: string;
   cohort: string | null;
   realName: string | null;
-  phone: string;
+  phone: string | null;
   wechat: string | null;
   email: string | null;
   province: string | null;
